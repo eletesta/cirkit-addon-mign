@@ -9,4 +9,6 @@ add_cirkit_library(
     PUBLIC ADDON_MIGN
   OPTIONS
     PRIVATE -Wno-sign-compare
+  COMMANDS
+    classical/cli/commands/mign_commands.hpp
 )

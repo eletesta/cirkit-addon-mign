@@ -84,7 +84,7 @@ int compute_depth_inv_rec ( const mign_graph& mign, mign_node node, std::vector<
 	    int depth = 0;
 	    for ( const auto& c : mign.children( node ) )
 	    {
-			auto d = compute_depth_inv_rec( mign, c.node, depths ); 
+		  auto d = compute_depth_inv_rec( mign, c.node, depths ); 
   		  if ((c.node != 0) && (c.complemented == 1))
   		  {
   			  d++; 
@@ -109,38 +109,48 @@ float compute_depth_rec_th ( const mign_graph& mign, mign_node node, std::vector
 	  else
 	  {
 	    float depth = 0;
+	    
 		const auto children = mign.children( node ); 
 	    for ( const auto& c : children )
 	    {
-	      depth = std::max( compute_depth_rec_th( mign, c.node, depths ), depth );
+		  auto d = compute_depth_rec_th( mign, c.node, depths ); 
+  		  if ((c.node != 0) && (c.complemented == 1))
+  		  {
+  			  auto c_c =  mign.children( c.node ); 
+			  if (c_c.size() == 3 )
+				  d = d + 7.92; 
+			  else if (c_c.size() == 5 )
+				  d = d + 8.27; 
+			  else if (c_c.size() == 7 )
+				  d = d + 8.56; 
+			  else if (c_c.size() == 9 )
+				  d = d + 8.81; 
+			  else 
+				  d++; 
+  		  }
+	      depth = std::max( d, depth );
 	    }
 		
 		if ((children.size() == 3) || (children.size() > 9)) // to avoid problems 
-	    {
-			
-			depths[node] = ( depth + 40 );
-			//std::cout << " caso con 3 = " << depths[node] << std::endl; 
+	    {	
+			depths[node] = ( depth + 29.52 );
 		}
 			
 		else if (children.size() == 5)
 		{
 			
-			 depths[node] = ( depth + 44 );
-			// std::cout << " caso con 5 = " << depths[node] << std::endl; 
+			 depths[node] = ( depth + 30.60 );
 		}
 	   
 		else if (children.size() == 7)
 	    {
 			
-			depths[node] = ( depth + 50 );
-			//std::cout << " caso con 7 = " << depths[node] << std::endl; 	
+			depths[node] = ( depth + 32.42 ); 	
 		}
 		
 		else 
 		{
-			
-			depths[node] = ( depth + 60 );
-			//std::cout << " caso con 5 = " << depths[node] << std::endl; 
+			depths[node] = ( depth + 34.47 );
 		}
 		return depths[node]; 
 	  }		
@@ -380,14 +390,37 @@ float evaluate_energy (mign_graph& mign)
 	     if ( mign.is_input( node) ) { continue; }
 
 	      const auto c = mign.children( node);
-		  if (c.size() <= 3 ) //|| (c.size() > 9))
-			  energy = energy + 3.8 + 0.49*mign.fanout_count(node); 
+		  if ((c.size() <= 3 ) || (c.size() > 9))
+			  energy = energy + 0.59 + 0.013*mign.fanout_count(node); 
 		  else if (c.size() == 5 ) 
-			  energy = energy + 4.8 + 0.49*mign.fanout_count(node);
+			  energy = energy + 0.66 + 0.013*mign.fanout_count(node);
 		 else  if (c.size() == 7 ) 
-			  energy = energy + 6 + 0.49*mign.fanout_count(node);
+			  energy = energy + 0.71 + 0.013*mign.fanout_count(node);
 		  else if (c.size() == 9 ) 
-			  energy = energy + 7.2 + 0.49*mign.fanout_count(node);
+			  energy = energy + 0.77 + 0.013*mign.fanout_count(node);
+	}
+	
+	return energy; 
+}
+
+float leakage_energy (mign_graph& mign, float depth)
+{
+	
+	float energy = 0; 
+	mign.compute_fanout(); 
+	for ( auto& node : mign.topological_nodes())
+	{
+	     if ( mign.is_input( node) ) { continue; }
+
+	      const auto c = mign.children( node);
+		  if ((c.size() <= 3 ) || (c.size() > 9))
+			  energy = energy + 0.6*0.28*depth; 
+		  else if (c.size() == 5 ) 
+			  energy = energy + 0.6*0.26*depth; 
+		 else  if (c.size() == 7 ) 
+			  energy = energy + 0.6*0.26*depth; 
+		  else if (c.size() == 9 ) 
+			  energy = energy + 0.6*0.28*depth; 
 	}
 	
 	return energy; 
@@ -517,23 +550,28 @@ void mign_print_stats (const mign_graph& mign, std::ostream& os = std::cout)
 {
 	const auto name = mign.name();
 	auto depth = evaluate_depth (mign); 
-	//auto depth_th = evaluate_depth_th (mign); 
-	//auto energy = evaluate_energy (mign);
+	auto depth_th = evaluate_depth_th (mign);
+	auto mign_nc = mign; 
+	auto energy = evaluate_energy (mign_nc);
+	auto energy_leak = leakage_energy(mign_nc,depth_th); 
 	auto ce = compute_ce (mign); 
-	auto inv = compute_inv(mign); 
-	auto depth_inv = evaluate_depth_inv(mign); 
-	auto dangling = compute_dangling(mign); 
-	os << boost::str( boost::format( "%s i/o = %d/%d , size = %d, depth = %d, ce = %d, inv = %d, depth_int = %d, dangling inputs = %d" ) %( name.empty() ? "(unnamed)" : name ) % mign.inputs().size() % mign.outputs().size() % mign.num_gates() % depth %ce %inv %depth_inv %dangling) << std::endl; 
+	//auto inv = compute_inv(mign); 
+	//auto depth_inv = evaluate_depth_inv(mign); 
+	//auto dangling = compute_dangling(mign); 
+	os << boost::str( boost::format( "%s i/o = %d/%d , size = %d, depth = %d, ce = %d" ) %( name.empty() ? "(unnamed)" : name ) % mign.inputs().size() % mign.outputs().size() % mign.num_gates() % depth %ce ) << std::endl; 
+	os << "****************************************" << std::endl;
+	os << boost::str( boost::format( " Depth threshold = %.2f" ) % depth_th) << std::endl;
+	os << boost::str( boost::format( " Energy threshold = %.2f" ) % energy) << std::endl;
+	os << boost::str( boost::format( " Energy threshold = %.2f" ) % energy_leak) << std::endl;
+	os << "****************************************" << std::endl;
 	
-	//os << boost::str( boost::format( " depth threshold = %.2f" ) % depth_th) << std::endl; 
-	//os << boost::str( boost::format( " Energy threshold = %d" ) % energy) << std::endl; 
 	print_depth_statistics(mign); 
 	
-	auto larger = compute_larger (mign); 
-	auto smaller = compute_smaller (mign); 
+	//auto larger = compute_larger (mign); 
+	//auto smaller = compute_smaller (mign); 
 	//os << boost::str( boost::format( "Mig-n: smaller n = %d, larger n = %d") %smaller %larger ) << std::endl; 
 	
-	print_big (mign, os);
+	//print_big (mign, os);
 	
 }
 

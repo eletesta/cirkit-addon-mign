@@ -42,6 +42,7 @@ std::vector<unsigned> mign_compute_levels( const mign_graph& mign );
 unsigned evaluate_depth (const mign_graph& mign);
 float evaluate_depth_th (const mign_graph& mign);
 float evaluate_energy (mign_graph& mign); 
+float leakage_energy (mign_graph& mign, float depth); 
 void mign_print_stats(const mign_graph& mign, std::ostream& os);
  
 std::deque<mign_node> mign_output_deque( const mign_graph& mign );

@@ -30,6 +30,7 @@
 #include <classical/mign/mign_io.hpp>
 #include <classical/mign/mign_utils.hpp>
 #include <classical/mign/mig_to_mign.hpp>
+#include <classical/mign/mign_lut_based_synthesis.hpp> 
 
 namespace alice
 {
@@ -53,6 +54,12 @@ mign_graph store_convert<mig_graph, mign_graph>( const mig_graph& mig )
   return mig_to_mign( mig );
 }
 
+template<>
+mig_graph store_convert<mign_graph, mig_graph>( const mign_graph& mign )
+{
+  return mign_to_mig( mign );
+}
+
 template<> 
 void print_store_entry_statistics<mign_graph>( std::ostream& os, const mign_graph& mign )
 {
@@ -71,8 +78,15 @@ void store_write_io_type<mign_graph, io_verilog_tag_t>( const mign_graph& mign, 
   write_verilog_compact( mign, filename );
 }
 
-}
 
+/*template<>
+void store_write_io_type<mign_graph, io_blif_tag_t>( const mign_graph& mign, const std::string& filename, const command& cmd )
+{
+	auto settings = std::make_shared<properties>();
+    write_blif( mign, filename, settings );
+}*/
+
+}
 // Local Variables:
 // c-basic-offset: 2
 // eval: (c-set-offset 'substatement-open 0)

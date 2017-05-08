@@ -100,7 +100,7 @@ std::vector<std::pair<unsigned, unsigned>> compute_level_ranges( mign_graph& mig
 mign_cuts_paged::mign_cuts_paged( mign_graph& mign, unsigned k, const properties::ptr& settings )
   : _mign( mign ),
     _k( k ),
-    _priority( get( settings, "priority", 10u ) ),
+    _priority( get( settings, "priority_cut" , 0) ),
     _extra( get( settings, "extra", 0u ) ),
     data( _mign.size(), 2u + _extra ),
     cones( _mign.size() )
@@ -589,12 +589,17 @@ mign_cuts_paged::local_cut_vec_t mign_cuts_paged::enumerate_local_cuts( const st
 			for (auto x = 0; x < local_cuts.size(); ++x)
 				{
 					double_cuts.push_back(local_cuts[x]); 
-				}	  
+				}	
+				
+				if (_priority > 0)  
+				{
+					if ( double_cuts.size() > _priority )
+					{
+						double_cuts.resize( _priority );
+					}
+				}
 
-				//if ( double_cuts.size() > _priority )
-				//{
-						//double_cuts.resize( _priority );
-				//}
+				
 
   return double_cuts;
 }

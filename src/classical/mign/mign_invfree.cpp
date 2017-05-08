@@ -27,7 +27,6 @@
 
 #include <classical/mign/mign_utils.hpp>
 
-
 namespace cirkit
 {
 	
@@ -434,6 +433,10 @@ mign_graph mign_fo_restricted ( mign_graph& mign)
 
 
 /************************** -- optimized method fanout *************************/
+
+
+
+
 
 void map_critpath_node_rec (mign_graph&mign, std::map<mign_node,unsigned>& cp_node, mign_node node, unsigned depth)
 {
@@ -1021,8 +1024,6 @@ mign_graph mign_fo_restricted_opt ( mign_graph& mign, unsigned int max_fo, bool 
 	//write_paths (mign_new);  
 	return mign_new; 
 }
-
-
 
 }
 // Local Variables:

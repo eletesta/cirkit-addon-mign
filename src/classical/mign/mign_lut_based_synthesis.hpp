@@ -25,37 +25,25 @@
  */
 
 /**
- * @file mign_sat_commands.hpp
+ * @file mign_lut_based_synthesis.hpp
  *
- * @brief TODO
+ * @brief LUT based synthesis algorithm for MIG-n
  *
- * @author Eleonora
+ * @author Eleonora Testa
  * @since  2.3
  */
 
-#ifndef MIGN_COMMANDS_HPP
-#define MIGN_COMMANDS_HPP
+#ifndef MIGN_LUT_BASED_SYNTHESIS_HPP
+#define MIGN_LUT_BASED_SYNTHESIS_HPP
 
-#include <classical/cli/stores_mign.hpp>
-#include <classical/cli/commands/threshold_synthesis.hpp>
-#include <classical/cli/commands/mign_rew.hpp>
+#include <core/properties.hpp>
+#include <classical/mign/mign.hpp>
 
 namespace cirkit
 {
 
-#define CIRKIT_MIGN_COMMANDS   \
-	cli.set_category(" Threshold Synthesis "); \
-	ADD_COMMAND (thres_synth); \
-	ADD_COMMAND (thres_majn); \
-	cli.set_category(" MIGn rewriting "); \
-	ADD_COMMAND (rules_rewriting); \
-	ADD_COMMAND (homo_rewriting); \
-	ADD_COMMAND (reduce_n_inputs); \
-	ADD_COMMAND (to_mig3); \
-	ADD_COMMAND (luts_mign); \
-	ADD_COMMAND (mign_inv_free); \
-	ADD_COMMAND (mign_fo_restr); \
-						
+mign_graph mign_lut_based_synthesis( const std::string& filename, const properties::ptr& settings, const properties::ptr& statistics );
+
 }
 
 #endif

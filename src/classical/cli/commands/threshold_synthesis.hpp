@@ -25,7 +25,7 @@
  */
 
 /**
- * @file mign_sat_commands.hpp
+ * @file exact_mign.hpp
  *
  * @brief TODO
  *
@@ -33,29 +33,37 @@
  * @since  2.3
  */
 
-#ifndef MIGN_COMMANDS_HPP
-#define MIGN_COMMANDS_HPP
+#ifndef CLI_THRESHOLD_SYNTHESIS_COMMAND_HPP
+#define CLI_THRESHOLD_SYNTHESIS_COMMAND_HPP
 
-#include <classical/cli/stores_mign.hpp>
-#include <classical/cli/commands/threshold_synthesis.hpp>
-#include <classical/cli/commands/mign_rew.hpp>
+#include <core/cli/cirkit_command.hpp>
 
 namespace cirkit
 {
 
-#define CIRKIT_MIGN_COMMANDS   \
-	cli.set_category(" Threshold Synthesis "); \
-	ADD_COMMAND (thres_synth); \
-	ADD_COMMAND (thres_majn); \
-	cli.set_category(" MIGn rewriting "); \
-	ADD_COMMAND (rules_rewriting); \
-	ADD_COMMAND (homo_rewriting); \
-	ADD_COMMAND (reduce_n_inputs); \
-	ADD_COMMAND (to_mig3); \
-	ADD_COMMAND (luts_mign); \
-	ADD_COMMAND (mign_inv_free); \
-	ADD_COMMAND (mign_fo_restr); \
-						
+class thres_synth_command : public cirkit_command
+{
+public:
+	thres_synth_command( const environment::ptr& env );
+	
+protected:
+	bool execute();
+};
+
+class thres_majn_command : public cirkit_command
+{
+public:
+	thres_majn_command( const environment::ptr& env );
+	
+protected:
+	bool execute();
+
+private:
+	unsigned cut_size = 6u;
+	unsigned priority_cut = 0; 
+	bool multi_obj_opt = false; 
+};
+
 }
 
 #endif

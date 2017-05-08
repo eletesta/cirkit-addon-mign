@@ -25,7 +25,7 @@
  */
 
 /**
- * @file mign_sat_commands.hpp
+ * @file exact_mign.hpp
  *
  * @brief TODO
  *
@@ -33,29 +33,87 @@
  * @since  2.3
  */
 
-#ifndef MIGN_COMMANDS_HPP
-#define MIGN_COMMANDS_HPP
+#ifndef CLI_MIGN_REWRITING_COMMAND_HPP
+#define CLI_MIGN_REWRITING_COMMAND_HPP
 
-#include <classical/cli/stores_mign.hpp>
-#include <classical/cli/commands/threshold_synthesis.hpp>
-#include <classical/cli/commands/mign_rew.hpp>
+#include <core/cli/cirkit_command.hpp>
 
 namespace cirkit
 {
 
-#define CIRKIT_MIGN_COMMANDS   \
-	cli.set_category(" Threshold Synthesis "); \
-	ADD_COMMAND (thres_synth); \
-	ADD_COMMAND (thres_majn); \
-	cli.set_category(" MIGn rewriting "); \
-	ADD_COMMAND (rules_rewriting); \
-	ADD_COMMAND (homo_rewriting); \
-	ADD_COMMAND (reduce_n_inputs); \
-	ADD_COMMAND (to_mig3); \
-	ADD_COMMAND (luts_mign); \
-	ADD_COMMAND (mign_inv_free); \
-	ADD_COMMAND (mign_fo_restr); \
-						
+class rules_rewriting_command : public cirkit_command
+{
+public:
+	rules_rewriting_command( const environment::ptr& env );
+	
+protected:
+	bool execute();
+};
+
+class homo_rewriting_command : public cirkit_command
+{
+public:
+	homo_rewriting_command( const environment::ptr& env );
+	
+protected:
+	bool execute();
+
+private:
+	unsigned n_inputs = 0;
+};
+
+class reduce_n_inputs_command : public cirkit_command
+{
+public:
+	reduce_n_inputs_command( const environment::ptr& env );
+	
+protected:
+	bool execute();
+private: 
+	unsigned max_inputs = 3u; 
+};
+
+class to_mig3_command : public cirkit_command
+{
+public:
+	to_mig3_command( const environment::ptr& env );
+	
+protected:
+	bool execute();
+};
+
+class luts_mign_command : public cirkit_command
+{
+public:
+	luts_mign_command( const environment::ptr& env );
+	
+protected:
+	bool execute();
+private:
+	std::string filename;
+};
+
+class mign_inv_free_command : public cirkit_command
+{
+public:
+	mign_inv_free_command( const environment::ptr& env );
+	
+protected:
+	bool execute();
+};
+
+class mign_fo_restr_command : public cirkit_command
+{
+public:
+	mign_fo_restr_command( const environment::ptr& env );
+	
+protected:
+	bool execute();
+private:
+	bool depth_const = 1; 
+	unsigned max_fanout = 3; 
+};
+
 }
 
 #endif

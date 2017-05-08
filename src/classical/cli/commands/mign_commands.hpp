@@ -38,16 +38,18 @@
 
 #include <classical/cli/stores_mign.hpp>
 #include <classical/cli/commands/threshold_synthesis.hpp>
+#include <classical/cli/commands/mignarith.hpp>
 #include <classical/cli/commands/mign_rew.hpp>
 
 namespace cirkit
 {
 
 #define CIRKIT_MIGN_COMMANDS   \
-	cli.set_category(" Threshold Synthesis "); \
+	cli.set_category(" Synthesis "); \
 	ADD_COMMAND (thres_synth); \
 	ADD_COMMAND (thres_majn); \
-	cli.set_category(" MIGn rewriting "); \
+	ADD_COMMAND (mignarith) ; \
+	cli.set_category("MIGn rewriting "); \
 	ADD_COMMAND (rules_rewriting); \
 	ADD_COMMAND (homo_rewriting); \
 	ADD_COMMAND (reduce_n_inputs); \

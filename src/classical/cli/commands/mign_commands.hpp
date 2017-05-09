@@ -41,6 +41,10 @@
 #include <classical/cli/commands/mignarith.hpp>
 #include <classical/cli/commands/mign_rew.hpp>
 
+using mign_store_types = boost::mpl::push_back<STORE_TYPES, mign_graph>::type; 
+#undef STORE_TYPES
+#define STORE_TYPES mign_store_types
+
 namespace cirkit
 {
 

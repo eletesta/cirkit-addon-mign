@@ -35,10 +35,11 @@
 #include <classical/mign/threshold_synthesis.hpp>
 #include <classical/mign/mign_multiobj_opt.hpp>
 #include <classical/mign/mign_flow_map.hpp>
+#include <classical/mign/mign_flow_almost_maj.hpp>
 #include <classical/mign/mign_cover.hpp> 
 #include <classical/mign/mign_utils.hpp>
 #include <classical/mign/mign_rewrite.hpp>
-#include <classical/cli/stores.hpp>
+#include <cli/stores.hpp>
 #include <classical/mign/mign_io.hpp>
 
 #include <classical/abc/abc_api.hpp>
@@ -120,19 +121,18 @@ thres_majn_command::thres_majn_command ( const environment::ptr& env )
 {
 	opts.add_options()
 		( "cut_size,c",          value_with_default( &cut_size ),       "cut size (maximum and default value 6)" )
-	    ( "priority_cut,p",      value_with_default( &priority_cut ),  "priority cut (value, default = 0)" )
-		( "multi_obj_opt,m",     value_with_default( &multi_obj_opt ), "multi objective optimization (both delay and energy) (1) ");
+	    ( "priority_cut,p",      value_with_default( &priority_cut ),   "priority cut (value, default = 0)" )
+		( "allow_almost,a",      value_with_default( &allow_almost ),   "allow usage of almost majority -- not with multiobjective" )
+		( "multi_obj_opt,m",     value_with_default( &multi_obj_opt ),  "multi objective optimization (both delay and energy) (1) ");
 }
 
 bool thres_majn_command::execute()
 {
-	   
 	auto statistics = std::make_shared<properties>();
 	auto settings = std::make_shared<properties>();
 	
 	if (multi_obj_opt == false)
 	{
-	
 	    clock_t t1,t2,t3,t4;
         std::ostream& os = std::cout;
 		
@@ -147,9 +147,10 @@ bool thres_majn_command::execute()
    	    auto& mign = migns.current();
 	  
    	    settings->set( "cut_size", cut_size );
-	    settings->set( "priority_cut", false); 
+	    settings->set( "priority_cut", priority_cut); 
+		settings->set( "almost_maj", allow_almost); 
    	    t1 = clock();
-   	    mign_flow_map( mign, settings, statistics );
+   	    mign_flow_almost_maj( mign, settings, statistics );
 	  
 
    	   t3 = clock();

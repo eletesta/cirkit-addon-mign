@@ -36,7 +36,11 @@
 #ifndef CLI_MIGN_REWRITING_COMMAND_HPP
 #define CLI_MIGN_REWRITING_COMMAND_HPP
 
-#include <core/cli/cirkit_command.hpp>
+#include <cli/cirkit_command.hpp>
+#include <classical/utils/truth_table_utils.hpp>
+
+#include <cudd.h>
+#include <cuddInt.h>
 
 namespace cirkit
 {
@@ -112,6 +116,30 @@ protected:
 private:
 	bool depth_const = 1; 
 	unsigned max_fanout = 3; 
+};
+
+class minim_ce_command : public cirkit_command
+{
+public:
+	minim_ce_command( const environment::ptr& env );
+	
+protected:
+	bool execute();
+	
+private:
+	tt spec; 
+};
+
+class bdd_to_mign_command : public cirkit_command
+{
+public:
+	bdd_to_mign_command( const environment::ptr& env );
+	
+protected:
+	bool execute();
+private:
+	bool ce_on = 0; 
+	unsigned order_option = 0; 
 };
 
 }

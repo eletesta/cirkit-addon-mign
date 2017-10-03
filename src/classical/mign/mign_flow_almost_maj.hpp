@@ -17,35 +17,24 @@
  */
 
 /**
- * @file mignarith.hpp
+ * @file mign_flow_almost_maj.hpp
  *
- * @brief Create MIG-n for arithmetic components
+ * @brief FlowMap algorithm for MIGns which considers MAJ-n and "Almost" MAJ-n
  *
- * @author Mathias Soeken
+ * @author Eleonora Testa 
  * @since  2.3
  */
 
-#ifndef CLI_MIGNARITH_COMMAND_HPP
-#define CLI_MIGNARITH_COMMAND_HPP
+#ifndef MIGN_FLOW_ALMOST_MAJ_HPP
+#define MIGN_FLOW_ALMOST_MAJ_HPP
 
-#include <cli/cirkit_command.hpp>
-#include <string.h>
+#include <core/properties.hpp>
+#include <classical/mign/mign.hpp>
 
 namespace cirkit
 {
 
-class mignarith_command : public cirkit_command
-{
-public:
-  mignarith_command( const environment::ptr& env );
-
-protected:
-  bool execute();
-
-private:
-  unsigned bits;
-  std::string numbers; 
-};
+void mign_flow_almost_maj ( mign_graph& mign, const properties::ptr& settings = properties::ptr(), const properties::ptr& statistics = properties::ptr() );
 
 }
 

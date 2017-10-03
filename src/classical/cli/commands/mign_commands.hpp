@@ -53,7 +53,7 @@ namespace cirkit
 	ADD_COMMAND (thres_synth); \
 	ADD_COMMAND (thres_majn); \
 	ADD_COMMAND (mignarith) ; \
-	cli.set_category("MIGn rewriting "); \
+	cli.set_category(" MIGn rewriting "); \
 	ADD_COMMAND (rules_rewriting); \
 	ADD_COMMAND (homo_rewriting); \
 	ADD_COMMAND (reduce_n_inputs); \
@@ -61,7 +61,8 @@ namespace cirkit
 	ADD_COMMAND (luts_mign); \
 	ADD_COMMAND (mign_inv_free); \
 	ADD_COMMAND (mign_fo_restr); \
-						
+    ADD_COMMAND (minim_ce); \
+    ADD_COMMAND (bdd_to_mign); 					
 }
 
 #endif

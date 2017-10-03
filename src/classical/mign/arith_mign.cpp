@@ -807,6 +807,474 @@ mign_graph exact_count (unsigned Nin, unsigned count)
 		return mign; 
 }
 
+mign_graph matrix_mult (unsigned i, unsigned k, unsigned j, unsigned option)
+{
+	mign_graph mign; 
+	
+	unsigned Nin_one = i * k; 
+	unsigned Nin_two = k * j; 
+	
+	mign.set_name("top"); 
+	std::unordered_map<std::string, mign_function> name_to_function;
+	std::vector<std::string> output_names;
+	std::vector<mign_function> operands;
+	
+    name_to_function.insert( {"1'b0", mign.get_constant( false )} );
+    name_to_function.insert( {"1'b1", mign.get_constant( true )} );
+	
+	for ( auto ii = 0; ii < i; ++ ii)
+	{
+		for ( auto kk = 0; kk < k; ++kk)
+		{
+			auto name = boost::str( boost::format( "x_%d%d" ) % ii % kk ); 
+		    name_to_function.insert ({name, mign.create_pi(name)}); 
+		}
+	}
+	
+	for ( auto kk = 0; kk < k; ++ kk)
+	{
+		for ( auto jj = 0; jj < j; ++jj)
+		{
+			auto name = boost::str( boost::format( "y_%d%d" ) % kk % jj ); 
+			name_to_function.insert ({name, mign.create_pi(name)}); 
+		}		
+	}
+	
+	std::vector<mign_function> operands_maj;
+	
+	for (auto ii = 0; ii < i; ii++)
+	{
+		for (auto jj = 0; jj < j; ++jj)
+		{
+			std::vector<mign_function> operands_or;
+			
+			for (auto kk = 0; kk < k; ++kk )
+			{
+				auto name_one = boost::str( boost::format( "x_%d%d" ) % ii % kk ); 
+				auto name_two = boost::str( boost::format( "y_%d%d" ) % kk % jj ); 
+				auto xy = boost::str( boost::format( "x_%d%d_y_%d%d" ) % ii % kk % kk % jj); 
+				std::vector<mign_function> operands_and;
+				operands_and.push_back(find_mign(name_to_function,name_one));
+				operands_and.push_back(find_mign(name_to_function,name_two));
+				auto f = mign.create_and(operands_and); 
+				name_to_function.insert ({xy, f}); 
+				operands_or.push_back(f); 
+			}
+			auto z = boost::str( boost::format( "z_%d%d" ) % ii % jj ); 
+			auto ff = mign.create_or(operands_or); 
+			name_to_function.insert ({z, ff}); 
+			operands_maj.push_back(ff); 
+		}
+	}
+	 
+	if (option == 1)
+	{
+		while (operands_maj.size() > 3)
+		{
+			unsigned int operations = (int) operands_maj.size()/3; 
+			auto reminder = operands_maj.size() % 3;  // REMINDER
+			auto gg = 0; 
+			std::vector<mign_function> operands_maj_provv;
+			for ( gg = 0; gg < (operands_maj.size() - reminder); gg = gg + 3)
+			{
+				std::vector<mign_function> operands_maj3;
+				auto z = boost::str( boost::format( "maj_%d" ) % gg ); 
+				operands_maj3.push_back(operands_maj[gg]); 
+				operands_maj3.push_back(operands_maj[gg+1]); 
+				operands_maj3.push_back(operands_maj[gg+2]); 
+				auto ff = mign.create_maj(operands_maj3); 
+				name_to_function.insert ({z, ff}); 
+				operands_maj_provv.push_back(ff); 
+			}
+			if (reminder == 1)
+			{
+				std::vector<mign_function> operands_maj3;
+				auto z = boost::str( boost::format( "maj_%d" ) % gg ); 
+				operands_maj3.push_back(operands_maj[gg]); 
+				operands_maj3.push_back(find_mign(name_to_function,"1'b0")); 
+				operands_maj3.push_back(find_mign(name_to_function,"1'b1")); 
+				auto ff = mign.create_maj(operands_maj3); 
+				name_to_function.insert ({z, ff}); 
+				operands_maj_provv.push_back(ff); 
+			}
+			else if (reminder == 2)
+			{
+				operands_maj_provv.push_back(operands_maj[gg]); 
+				operands_maj_provv.push_back(operands_maj[gg + 1]); 
+			}
+			else 
+				
+			{
+				reminder = 0; 
+			}
+
+			operands_maj.erase(operands_maj.begin(), operands_maj.end()); 
+			operands_maj = operands_maj_provv; 
+		 }
+	
+			auto out_name = boost::str( boost::format( "out" )); 
+			output_names.push_back(out_name); 
+		
+			const auto last = "last"; 
+		
+			if (operands_maj.size() == 1)
+			{
+				std::vector<mign_function> operands_final;
+				operands_final.push_back(operands_maj[0]); 
+				operands_final.push_back(find_mign(name_to_function,"1'b0")); 
+				operands_final.push_back(find_mign(name_to_function,"1'b1")); 
+				auto f = mign.create_maj(operands_final); 
+				name_to_function.insert ({last, f}); 
+			}
+			else if (operands_maj.size() == 2)
+			{
+				std::vector<mign_function> operands_final;
+				operands_final.push_back(operands_maj[0]); 
+				operands_final.push_back(operands_maj[1]); 
+				auto f = mign.create_and(operands_final); 
+				name_to_function.insert ({last, f}); 
+			}
+			else 
+			{
+				std::vector<mign_function> operands_final;
+				operands_final.push_back(operands_maj[0]); 
+				operands_final.push_back(operands_maj[1]); 
+				operands_final.push_back(operands_maj[2]); 
+				auto f = mign.create_maj(operands_final); 
+				name_to_function.insert ({last, f});
+			}
+			 	
+			mign.create_po(name_to_function[last],out_name );
+	
+		return mign; 
+	}
+	else if (option == 2)
+	{
+		while (operands_maj.size() > 5)
+		{
+			unsigned int operations = (int) operands_maj.size()/5; 
+			auto reminder = operands_maj.size() % 5;  // REMINDER
+			auto gg = 0; 
+			std::vector<mign_function> operands_maj_provv;
+			for ( gg = 0; gg < (operands_maj.size() - reminder); gg = gg + 5)
+			{
+				std::vector<mign_function> operands_maj3;
+				auto z = boost::str( boost::format( "maj_%d" ) % gg ); 
+				operands_maj3.push_back(operands_maj[gg]); 
+				operands_maj3.push_back(operands_maj[gg+1]); 
+				operands_maj3.push_back(operands_maj[gg+2]);
+				operands_maj3.push_back(operands_maj[gg+3]); 
+				operands_maj3.push_back(operands_maj[gg+4]); 
+				auto ff = mign.create_maj(operands_maj3); 
+				name_to_function.insert ({z, ff}); 
+				operands_maj_provv.push_back(ff); 
+			}
+			if (reminder == 1)
+			{
+				std::vector<mign_function> operands_maj3;
+				auto z = boost::str( boost::format( "maj_%d" ) % gg ); 
+				operands_maj3.push_back(operands_maj[gg]); 
+				operands_maj3.push_back(find_mign(name_to_function,"1'b0")); 
+				operands_maj3.push_back(find_mign(name_to_function,"1'b1")); 
+				operands_maj3.push_back(find_mign(name_to_function,"1'b0")); 
+				operands_maj3.push_back(find_mign(name_to_function,"1'b1")); 
+				auto ff = mign.create_maj(operands_maj3); 
+				name_to_function.insert ({z, ff}); 
+				operands_maj_provv.push_back(ff); 
+			}
+			else if (reminder == 2)
+			{
+				operands_maj_provv.push_back(operands_maj[gg]); 
+				operands_maj_provv.push_back(operands_maj[gg + 1]); 
+			}
+			else if (reminder == 3)
+			{
+				std::vector<mign_function> operands_maj3;
+				auto z = boost::str( boost::format( "maj_%d" ) % gg ); 
+				operands_maj3.push_back(operands_maj[gg]); 
+				operands_maj3.push_back(operands_maj[gg+1]); 
+				operands_maj3.push_back(operands_maj[gg+2]); 
+				operands_maj3.push_back(find_mign(name_to_function,"1'b0")); 
+				operands_maj3.push_back(find_mign(name_to_function,"1'b1")); 
+				auto ff = mign.create_maj(operands_maj3); 
+				name_to_function.insert ({z, ff}); 
+				operands_maj_provv.push_back(ff); 
+			}
+			else if (reminder == 4)
+			{
+				operands_maj_provv.push_back(operands_maj[gg]); 
+				operands_maj_provv.push_back(operands_maj[gg + 1]); 
+				operands_maj_provv.push_back(operands_maj[gg+2]); 
+				operands_maj_provv.push_back(operands_maj[gg+3]); 
+			}
+			else 
+				reminder = 0; 
+		
+			operands_maj.erase(operands_maj.begin(), operands_maj.end()); 
+			operands_maj = operands_maj_provv; 
+		 }
+	
+			auto out_name = boost::str( boost::format( "out" )); 
+			output_names.push_back(out_name); 
+		
+			const auto last = "last"; 
+		
+			if (operands_maj.size() == 1)
+			{
+				std::vector<mign_function> operands_final;
+				operands_final.push_back(operands_maj[0]); 
+				operands_final.push_back(find_mign(name_to_function,"1'b0")); 
+				operands_final.push_back(find_mign(name_to_function,"1'b1")); 
+				auto f = mign.create_maj(operands_final); 
+				name_to_function.insert ({last, f}); 
+			}
+			else if (operands_maj.size() == 2)
+			{
+				std::vector<mign_function> operands_final;
+				operands_final.push_back(operands_maj[0]); 
+				operands_final.push_back(operands_maj[1]); 
+				auto f = mign.create_and(operands_final); 
+				name_to_function.insert ({last, f}); 
+			}
+			else if (operands_maj.size() == 3)
+			{
+				std::vector<mign_function> operands_final;
+				operands_final.push_back(operands_maj[0]); 
+				operands_final.push_back(operands_maj[1]); 
+				operands_final.push_back(operands_maj[2]); 
+				auto f = mign.create_maj(operands_final); 
+				name_to_function.insert ({last, f});
+			}
+			else if (operands_maj.size() == 4)
+			{
+				std::vector<mign_function> operands_final;
+				operands_final.push_back(operands_maj[0]); 
+				operands_final.push_back(operands_maj[1]); 
+				operands_final.push_back(operands_maj[2]); 
+				operands_final.push_back(operands_maj[3]); 
+				operands_final.push_back(find_mign(name_to_function,"1'b0")); 
+				auto f = mign.create_maj(operands_final); 
+				name_to_function.insert ({last, f});
+			}
+			else
+			{
+				std::vector<mign_function> operands_final;
+				operands_final.push_back(operands_maj[0]); 
+				operands_final.push_back(operands_maj[1]); 
+				operands_final.push_back(operands_maj[2]); 
+				operands_final.push_back(operands_maj[3]); 
+				operands_final.push_back(operands_maj[4]); 
+				auto f = mign.create_maj(operands_final); 
+				name_to_function.insert ({last, f});
+			}
+			 	
+			mign.create_po(name_to_function[last],out_name );
+	
+		return mign; 
+	}
+	else if (option == 3)
+	{
+		while (operands_maj.size() > 7)
+		{
+			unsigned int operations = (int) operands_maj.size()/7; 
+			auto reminder = operands_maj.size() % 7;  // REMINDER
+			auto gg = 0; 
+			std::vector<mign_function> operands_maj_provv;
+			for ( gg = 0; gg < (operands_maj.size() - reminder); gg = gg + 7)
+			{
+				std::vector<mign_function> operands_maj3;
+				auto z = boost::str( boost::format( "maj_%d" ) % gg ); 
+				operands_maj3.push_back(operands_maj[gg]); 
+				operands_maj3.push_back(operands_maj[gg+1]); 
+				operands_maj3.push_back(operands_maj[gg+2]);
+				operands_maj3.push_back(operands_maj[gg+3]); 
+				operands_maj3.push_back(operands_maj[gg+4]); 
+				operands_maj3.push_back(operands_maj[gg+5]); 
+				operands_maj3.push_back(operands_maj[gg+6]); 
+				auto ff = mign.create_maj(operands_maj3); 
+				name_to_function.insert ({z, ff}); 
+				operands_maj_provv.push_back(ff); 
+			}
+			if (reminder == 1)
+			{
+				std::vector<mign_function> operands_maj3;
+				auto z = boost::str( boost::format( "maj_%d" ) % gg ); 
+				operands_maj3.push_back(operands_maj[gg]); 
+				operands_maj3.push_back(find_mign(name_to_function,"1'b0")); 
+				operands_maj3.push_back(find_mign(name_to_function,"1'b1")); 
+				auto ff = mign.create_maj(operands_maj3); 
+				name_to_function.insert ({z, ff}); 
+				operands_maj_provv.push_back(ff); 
+			}
+			else if (reminder == 2)
+			{
+				operands_maj_provv.push_back(operands_maj[gg]); 
+				operands_maj_provv.push_back(operands_maj[gg + 1]); 
+			}
+			else if (reminder == 3)
+			{
+				std::vector<mign_function> operands_maj3;
+				auto z = boost::str( boost::format( "maj_%d" ) % gg ); 
+				operands_maj3.push_back(operands_maj[gg]); 
+				operands_maj3.push_back(operands_maj[gg+1]); 
+				operands_maj3.push_back(operands_maj[gg+2]); 
+				operands_maj3.push_back(find_mign(name_to_function,"1'b0")); 
+				operands_maj3.push_back(find_mign(name_to_function,"1'b1")); 
+				auto ff = mign.create_maj(operands_maj3); 
+				name_to_function.insert ({z, ff}); 
+				operands_maj_provv.push_back(ff); 
+			}
+			else if (reminder == 4)
+			{
+				operands_maj_provv.push_back(operands_maj[gg]); 
+				operands_maj_provv.push_back(operands_maj[gg+1]); 
+				operands_maj_provv.push_back(operands_maj[gg+2]); 
+				operands_maj_provv.push_back(operands_maj[gg+3]); 
+			}
+			else if (reminder == 5)
+			{
+				std::vector<mign_function> operands_maj3;
+				auto z = boost::str( boost::format( "maj_%d" ) % gg ); 
+				operands_maj3.push_back(operands_maj[gg]); 
+				operands_maj3.push_back(operands_maj[gg+1]); 
+				operands_maj3.push_back(operands_maj[gg+2]); 
+				operands_maj3.push_back(operands_maj[gg+3]); 
+				operands_maj3.push_back(operands_maj[gg+4]);
+				operands_maj3.push_back(find_mign(name_to_function,"1'b0")); 
+				operands_maj3.push_back(find_mign(name_to_function,"1'b1")); 
+				auto ff = mign.create_maj(operands_maj3); 
+				name_to_function.insert ({z, ff}); 
+				operands_maj_provv.push_back(ff); 
+			}
+			else if (reminder == 6)
+			{
+				operands_maj_provv.push_back(operands_maj[gg]); 
+				operands_maj_provv.push_back(operands_maj[gg+1]); 
+				operands_maj_provv.push_back(operands_maj[gg+2]); 
+				operands_maj_provv.push_back(operands_maj[gg+3]); 
+				operands_maj_provv.push_back(operands_maj[gg+4]); 
+				operands_maj_provv.push_back(operands_maj[gg+5]);
+			}
+			else 
+				reminder = 0; 
+		
+			operands_maj.erase(operands_maj.begin(), operands_maj.end()); 
+			operands_maj = operands_maj_provv; 
+		 }
+	
+			auto out_name = boost::str( boost::format( "out" )); 
+			output_names.push_back(out_name); 
+		
+			const auto last = "last"; 
+		
+			if (operands_maj.size() == 1)
+			{
+				std::vector<mign_function> operands_final;
+				operands_final.push_back(operands_maj[0]); 
+				operands_final.push_back(find_mign(name_to_function,"1'b0")); 
+				operands_final.push_back(find_mign(name_to_function,"1'b1")); 
+				auto f = mign.create_maj(operands_final); 
+				name_to_function.insert ({last, f}); 
+			}
+			else if (operands_maj.size() == 2)
+			{
+				std::vector<mign_function> operands_final;
+				operands_final.push_back(operands_maj[0]); 
+				operands_final.push_back(operands_maj[1]); 
+				auto f = mign.create_and(operands_final); 
+				name_to_function.insert ({last, f}); 
+			}
+			else if (operands_maj.size() == 3)
+			{
+				std::vector<mign_function> operands_final;
+				operands_final.push_back(operands_maj[0]); 
+				operands_final.push_back(operands_maj[1]); 
+				operands_final.push_back(operands_maj[2]); 
+				auto f = mign.create_maj(operands_final); 
+				name_to_function.insert ({last, f});
+			}
+			else if (operands_maj.size() == 4)
+			{
+				std::vector<mign_function> operands_final;
+				operands_final.push_back(operands_maj[0]); 
+				operands_final.push_back(operands_maj[1]); 
+				operands_final.push_back(operands_maj[2]); 
+				operands_final.push_back(operands_maj[3]); 
+				operands_final.push_back(find_mign(name_to_function,"1'b0")); 
+				auto f = mign.create_maj(operands_final); 
+				name_to_function.insert ({last, f});
+			}
+			else if (operands_maj.size() == 5)
+			{
+				std::vector<mign_function> operands_final;
+				operands_final.push_back(operands_maj[0]); 
+				operands_final.push_back(operands_maj[1]); 
+				operands_final.push_back(operands_maj[2]); 
+				operands_final.push_back(operands_maj[3]); 
+				operands_final.push_back(operands_maj[4]); 
+				auto f = mign.create_maj(operands_final); 
+				name_to_function.insert ({last, f});
+			}
+			else if (operands_maj.size() == 6)
+			{
+				std::vector<mign_function> operands_final;
+				operands_final.push_back(operands_maj[0]); 
+				operands_final.push_back(operands_maj[1]); 
+				operands_final.push_back(operands_maj[2]); 
+				operands_final.push_back(operands_maj[3]); 
+				operands_final.push_back(operands_maj[4]); 
+				operands_final.push_back(operands_maj[5]); 
+				operands_final.push_back(find_mign(name_to_function,"1'b0")); 
+				auto f = mign.create_maj(operands_final); 
+				name_to_function.insert ({last, f});
+			}
+			else 
+			{
+				std::vector<mign_function> operands_final;
+				operands_final.push_back(operands_maj[0]); 
+				operands_final.push_back(operands_maj[1]); 
+				operands_final.push_back(operands_maj[2]); 
+				operands_final.push_back(operands_maj[3]); 
+				operands_final.push_back(operands_maj[4]); 
+				operands_final.push_back(operands_maj[5]); 
+				operands_final.push_back(operands_maj[6]); 
+				auto f = mign.create_maj(operands_final); 
+				name_to_function.insert ({last, f});
+			}
+			 	
+			mign.create_po(name_to_function[last],out_name );
+	
+		return mign; 
+	}
+	else 
+	{
+		if ((operands_maj.size() % 2) == 0)
+		{
+			auto out_name = boost::str( boost::format( "out" )); 
+			output_names.push_back(out_name); 
+		
+			const auto last = "last"; 
+			operands_maj.push_back(find_mign(name_to_function,"1'b0"));
+			auto ff = mign.create_maj(operands_maj); 
+			name_to_function.insert ({last, ff}); 
+			mign.create_po(name_to_function[last],out_name );
+		}
+		else 
+		{
+			auto out_name = boost::str( boost::format( "out" )); 
+			output_names.push_back(out_name); 
+		    const auto last = "last"; 
+			auto ff = mign.create_maj(operands_maj); 
+			name_to_function.insert ({last, ff}); 
+			mign.create_po(name_to_function[last],out_name );
+		}
+		return mign; 
+	}
+	
+	return mign; 
+	
+}
+
 mign_graph bitcount (unsigned Nin)
 {
 	mign_graph mign; 

@@ -31,6 +31,7 @@
 #include <classical/mign/mign_utils.hpp>
 #include <classical/mign/mig_to_mign.hpp>
 #include <classical/mign/mign_lut_based_synthesis.hpp> 
+#include <classical/mign/bdd_to_mign.hpp>
 
 namespace alice
 {
@@ -78,6 +79,11 @@ void store_write_io_type<mign_graph, io_verilog_tag_t>( const mign_graph& mign, 
   write_verilog_compact( mign, filename );
 }
 
+/*template<>
+mign_graph store_convert<bdd_function_t, mign_graph>( const bdd_function_t& bdd)
+{
+  return bdd_to_mign (bdd); 
+}*/
 
 /*template<>
 void store_write_io_type<mign_graph, io_blif_tag_t>( const mign_graph& mign, const std::string& filename, const command& cmd )

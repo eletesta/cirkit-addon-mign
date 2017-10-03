@@ -17,32 +17,28 @@
  */
 
 /**
- * @file mign.hpp
+ * @file bdd_to_mign.hpp
  *
- * @brief Create the bitcount with nmig. poly depth
+ * @brief convert monotone bdds to mign
  *
  * @author Eleonora Testa
  * @since  2.3
  */
 
-#ifndef BITCOUNT_HPP
-#define BITCOUNT_HPP
+#ifndef BDD_TO_MIGN_HPP
+#define BDD_TO_MIGN_HPP
 
 
 #include <classical/mign/mign.hpp>
-#include <boost/optional/optional.hpp>
+
+#include <core/utils/bdd_utils.hpp>
+
 
 namespace cirkit 
 {
+	
+mign_graph bdd_to_mign (const bdd_function_t& bdd, const bool ce_on, unsigned order_option); 
 
-mign_function find_mign(const std::unordered_map<std::string, mign_function>& name_to_function, const std::string& name );
-mign_graph bitcount (unsigned Nin); 
-mign_graph exact_count (unsigned Nin, unsigned count); 
-mign_graph threshold (unsigned Nin, unsigned threshold, unsigned polarity,std::vector<unsigned> weigths); 
-mign_graph add2_luca (unsigned input);
-mign_graph addm (unsigned m, unsigned n); 
-mign_graph mult2 (unsigned int Nin); 
-mign_graph matrix_mult (unsigned i, unsigned j, unsigned k, unsigned option); 
 }
 
 #endif

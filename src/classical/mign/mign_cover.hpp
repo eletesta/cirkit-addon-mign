@@ -47,11 +47,13 @@ public:
   mign_cover( unsigned cut_size, const mign_graph& mign );
   mign_cover(); 
 
-  void add_cut( mign_node n, const mign_cuts_paged::cut& cut , const unsigned T, const std::vector<unsigned> w, const std::vector<bool> neg_un);
+  void add_cut( mign_node n, const mign_cuts_paged::cut& cut , const unsigned T, const std::vector<unsigned> w, const std::vector<bool> neg_un, const int A_node, const int is_maj);
   bool has_cut( mign_node n ) const;
   unsigned has_threshold (mign_node n) const; 
   std::vector<unsigned> has_weights (mign_node n) const; 
   std::vector<bool> neg_una(mign_node n) const; 
+  int has_almost (mign_node n) const;
+  int has_is_maj (mign_node n) const;
   index_range cut( mign_node n ) const;
 
   inline unsigned cut_size() const { return _cut_size; }
@@ -64,6 +66,8 @@ private:
   std::vector<unsigned> threshold; // T = 0 means no "big" threshold. Normal majority node. 
   std::vector<std::vector<unsigned>> weights; 
   std::vector<std::vector<bool>> neg_un; 
+  std::vector<int> almost_node; 
+  std::vector<int> almost_node_is_maj; 
   std::vector<unsigned> offset; /* address from node index to leafs, 0 if unused */
   std::vector<unsigned> leafs;  /* first element is unused, then | #leafs | l_1 | l_2 | ... | l_k | */
   unsigned              count = 0u;
@@ -71,7 +75,6 @@ private:
 
  mign_graph mign_cover_write (const mign_graph& mign); 
  std::vector<mign_graph> mign_cover_write_multi (mign_graph& mign); 
-//void xmg_cover_write_dot( const xmg_graph& xmg, const std::string& filename );
  
 }
 

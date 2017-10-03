@@ -33,12 +33,15 @@
 #include <classical/mign/mign_utils.hpp>
 #include <classical/mign/threshold_synthesis.hpp>
 
+#define timer timer_class
+#include <boost/progress.hpp>
+#undef timer
 
 #define L(x) if ( verbose ) { std::cout << x; }
 #define LN(x) if ( verbose ) { std::cout << x << std::endl; }
 
-using namespace boost::program_options;
-using boost::format;
+//using namespace boost::program_options;
+//using boost::format;
 
 namespace cirkit
 {
@@ -73,6 +76,7 @@ private:
 
   /* settings */
   bool     verbose;
+  bool     progress;
   unsigned cut_size;
   unsigned priority_cut;
 };
@@ -89,29 +93,21 @@ mign_flow_map_manager::mign_flow_map_manager( mign_graph& mign, const properties
 {
   verbose  = get( settings, "verbose",  true );
   cut_size = get( settings, "cut_size", 6u);
-  priority_cut = get( settings, "priority_cut", 0);
+  progress = get( settings, "progress", true);
+  priority_cut = get( settings, "priority_cut", 0u);
 }
 
 void mign_flow_map_manager::run()
 {
   /* compute cuts */
-	clock_t t1,t2,t3,t4;
 	
-  cuts = std::make_shared<mign_cuts_paged>( mign, cut_size, settings);
-  LN( boost::format( "[i] enumerated %d cuts in %.2f secs" ) % cuts->total_cut_count() % cuts->enumeration_time() );
+    auto cuts_settings = std::make_shared<properties>();
+    cuts_settings->set( "progress", progress );
+    cuts = std::make_shared<mign_cuts_paged>( mign, cut_size, cuts_settings);
+    LN( boost::format( "[i] enumerated %d cuts in %.2f secs" ) % cuts->total_cut_count() % cuts->enumeration_time()) ;
 
-     t1 = clock();
-     find_best_cuts();
-	 t2 = clock();
-	 float diff ((float)t2 - (float)t1);
-	 float seconds = diff / CLOCKS_PER_SEC;
-	 std::cout << format( "[i] run-time find best cut: %.2f seconds" ) % seconds << std::endl;
-	 t3 = clock(); 
-	extract_cover();
-    t4 = clock();
-    float difftwo ((float)t4 - (float)t3);
-    seconds = difftwo / CLOCKS_PER_SEC;
-    std::cout << format( "[i] run-time extract cover: %.2f seconds" ) % seconds << std::endl;
+    find_best_cuts(); 
+	extract_cover(); 
 }
 
 void mign_flow_map_manager::find_best_cuts()
@@ -157,17 +153,10 @@ void mign_flow_map_manager::find_best_cuts()
 				continue; } 
 		
 		auto T = result.t_and_w.first; 
-		//std::cout << " t = " << T << std::endl; 
 		auto weig = result.t_and_w.second; 
-		for ( auto& e : weig)
-		{
-			//std::cout << e; 
-		}
-		//std::cout << std::endl; 
+	
 		auto n_of_input = input_threshold (num_vars,T, 0, weig) ; 
 		
-		//std::cout << " it is a threshold " << std::endl; 
-	
 		if (n_of_input >= 11)	{
 				continue; }
 				
@@ -218,7 +207,7 @@ void mign_flow_map_manager::extract_cover()
     visited[node] = true;
 	
     auto cut = cuts->from_address( node_to_cut[node] );
-    cover.add_cut( node, cut, threshold[node], weights[node], neg_un[node]);
+    cover.add_cut( node, cut, threshold[node], weights[node], neg_un[node], -1, -1);
 
     for ( auto leaf : cut )
     {

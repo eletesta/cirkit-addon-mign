@@ -33,9 +33,11 @@
 #include <string>
 #include <vector>
 
+#include <cli/stores.hpp>
+#include <core/utils/bdd_utils.hpp>
+
 #include <classical/aig.hpp>
 #include <classical/mig/mig.hpp>
-#include <classical/cli/stores.hpp>
 #include <classical/mign/mign.hpp>
 #include <classical/utils/expression_parser.hpp>
 #include <classical/mig/mig_utils.hpp>
@@ -88,6 +90,13 @@ inline bool store_can_convert<mign_graph, mig_graph>() { return true; }
 
 template<>
 mig_graph store_convert<mign_graph, mig_graph>( const mign_graph& mign );
+
+/*template<>
+inline bool store_can_convert<bdd_function_t, mign_graph>() { return true; }
+
+template<>
+mign_graph store_convert<bdd_function_t, mign_graph>( const bdd_function_t& bdd );*/
+
 
 /*template<>
 inline bool store_can_write_io_type<mign_graph, io_blif_tag_t>( command& cmd ) { return true; }

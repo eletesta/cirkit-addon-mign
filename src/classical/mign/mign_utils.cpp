@@ -256,7 +256,7 @@ unsigned compute_inv (const mign_graph& mign)
 	
 	for ( const auto& output : mign.outputs())
 	{
-		if ( output.first.complemented == 1)
+		if (( output.first.complemented == 1) && ( output.first.node != 0))
 		{
 			if (std::find(count.begin(), count.end(), output.first.node) != count.end())
 				continue; 
@@ -555,14 +555,14 @@ void mign_print_stats (const mign_graph& mign, std::ostream& os = std::cout)
 	auto energy = evaluate_energy (mign_nc);
 	auto energy_leak = leakage_energy(mign_nc,depth_th); 
 	auto ce = compute_ce (mign); 
-	//auto inv = compute_inv(mign); 
-	//auto depth_inv = evaluate_depth_inv(mign); 
-	//auto dangling = compute_dangling(mign); 
-	os << boost::str( boost::format( "%s i/o = %d/%d , size = %d, depth = %d, ce = %d" ) %( name.empty() ? "(unnamed)" : name ) % mign.inputs().size() % mign.outputs().size() % mign.num_gates() % depth %ce ) << std::endl; 
+	auto inv = compute_inv(mign); 
+	auto depth_inv = evaluate_depth_inv(mign); 
+	auto dangling = compute_dangling(mign); 
+	os << boost::str( boost::format( "%s i/o = %d/%d , size = %d, depth = %d, ce = %d, inverters = %d, depth_inv = %d, dangling = %d" ) %( name.empty() ? "(unnamed)" : name ) % mign.inputs().size() % mign.outputs().size() % mign.num_gates() % depth %ce %inv %depth_inv %dangling) << std::endl; 
 	os << "****************************************" << std::endl;
-	os << boost::str( boost::format( " Depth threshold = %.2f" ) % depth_th) << std::endl;
-	os << boost::str( boost::format( " Energy threshold = %.2f" ) % energy) << std::endl;
-	os << boost::str( boost::format( " Energy threshold = %.2f" ) % energy_leak) << std::endl;
+	//os << boost::str( boost::format( " Depth threshold = %.2f" ) % depth_th) << std::endl;
+	//os << boost::str( boost::format( " Energy threshold = %.2f" ) % energy) << std::endl;
+	//os << boost::str( boost::format( " Energy threshold = %.2f" ) % energy_leak) << std::endl;
 	os << "****************************************" << std::endl;
 	
 	print_depth_statistics(mign); 

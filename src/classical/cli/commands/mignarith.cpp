@@ -19,6 +19,10 @@
 #include "mignarith.hpp"
 
 #include <boost/program_options.hpp>
+#include <boost/algorithm/string/join.hpp>
+#include <boost/format.hpp>
+
+#include <core/utils/string_utils.hpp>
 
 #include <classical/cli/stores_mign.hpp>
 #include <classical/mign/arith_mign.hpp>
@@ -48,9 +52,10 @@ mignarith_command::mignarith_command( const environment::ptr& env )
     ( "bitcount,b", value( &bits ),          "create bitcount circuit" )
 	( "exact_counter,e", value(&numbers),    "create exact counter with count m of n input n:m")
     ( "add2,a", value( &bits),               "create add of two number of n bits, constant depth" )
-	( "addm,am", value (&numbers),           "create add of m number of n bits m:n")
+	( "addm,b", value (&numbers),            "create add of m number of n bits m:n")
     ( "mult2,m", value (&bits),              "create mult of two numbers of n bits, constant depth")
     ( "threshold,t", value(&numbers),        "create threshold t gate of n number with polarity p n:t:p, weights can be inserted (1,1,1)")
+	( "matrix_mult,z", value(&numbers),      "create 2-matrix multiplication-like monotone circuit - arg (n:n:n:n); first three values are three matrix dimensions, second are final majority dimensions ")
     ;
 }
 
@@ -226,6 +231,31 @@ bool mignarith_command::execute()
       
       migns.extend();
 	  migns.current() = threshold( input ,thre, polarity, weights);
+  }
+  
+  if ( is_set("matrix_mult"))
+  {
+      std::vector<unsigned> values; 
+	  
+	  foreach_string( numbers, ":", [&values](const std::string& str) {
+				
+		          values.push_back(std::stoi(str)); 
+				  
+	              } );
+				  
+	  if (values.size() != 4)
+		  {
+			  std::cout << " One input value is missing" << std::endl; 
+			  return true; 
+		  }
+      
+      auto i = values[0]; 
+      auto k = values[1];
+      auto j = values[2]; 
+	  auto option = values[3]; 
+       
+      migns.extend();
+	  migns.current() = matrix_mult (i, k, j, option); 
   }
 
   return true;

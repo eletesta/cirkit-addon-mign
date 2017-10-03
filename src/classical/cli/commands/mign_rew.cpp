@@ -29,6 +29,8 @@
 #include <iostream>
 
 #include <core/utils/program_options.hpp>
+#include <cli/stores.hpp>
+#include <core/utils/bdd_utils.hpp>
 
 #include <classical/cli/stores_mign.hpp>
 #include <classical/mign/mign.hpp>
@@ -38,14 +40,17 @@
 #include <classical/mign/mign_cover.hpp> 
 #include <classical/mign/mign_utils.hpp>
 #include <classical/mign/mign_rewrite.hpp>
-#include <classical/cli/stores.hpp>
+#include <classical/mign/bdd_to_mign.hpp>
 #include <classical/mign/mign_io.hpp>
 #include <classical/mign/mign_lut_based_synthesis.hpp> 
+#include <classical/mign/mign_simulate.hpp>
 #include <classical/mign/mign_rewriting.hpp>
 #include <classical/mign/mign_rewriting_majn_to_smaller.hpp>
 #include <classical/mign/mign_to_mig3.hpp>
 #include <classical/mign/mign_invfree.hpp>
 #include <classical/mign/create_homo.hpp>
+#include <classical/mign/minimum_ce/minimum_ce.hpp>
+
 
 #include <classical/abc/abc_api.hpp>
 #include <classical/abc/abc_manager.hpp>
@@ -257,6 +262,90 @@ bool mign_fo_restr_command::execute()
     migns.extend();
   
     migns.current() = mign_new;
+		
+    return true;
+}
+
+minim_ce_command::minim_ce_command ( const environment::ptr& env )
+	: cirkit_command( env, "Minimize CE in the Mig-n" )
+{
+	opts.add_options()
+		( "sat_on_tt,s",       value(&spec),       "using SAT-based method (arg tt)" )
+	    ( "sat_from_mign,m",                       "using SAT-based method not changing original MIG-n (arg Mig-n) - works for single output" )
+		( "tree_opt_ffr,t",                        "using heuristic method (arg Mig-n)" );
+}
+
+bool minim_ce_command::execute()
+{
+	   
+    auto statistics = std::make_shared<properties>();
+    auto settings = std::make_shared<properties>();
+    auto& migns = env->store<mign_graph>();
+	
+	if ( is_set( "sat_on_tt" ) )
+	{
+		settings-> set("minimum_after", false); 
+	
+		mign_graph mign_empty; 
+		auto mign = min_ce_with_sat( mign_empty,spec,settings,statistics);
+	    migns.extend();
+		migns.current() = mign; 
+	}
+	
+	if ( is_set( "sat_from_mign" ) )
+	{
+		settings-> set("minimum_after", true); 
+	
+		auto mign_old = migns.current();   
+		std::cout << " Number of CE = " << compute_ce(mign_old) << std::endl; 
+		const mign_tt_simulator simulator{};
+		auto values = simulate_mign(mign_old, simulator);
+		auto spec_tt = values[mign_old.outputs()[0].first];
+		auto mign = min_ce_with_sat( mign_old,spec_tt,settings,statistics); 
+		std::cout << " New number of CE = " << compute_ce(mign) << std::endl; 
+	    migns.extend();
+		migns.current() = mign; 
+	}
+
+	if ( is_set( "tree_opt_ffr" ) )
+	{
+		settings-> set("minimum_after", false); 
+	
+		mign_graph mign_empty; 
+		auto mign = min_ce_with_sat( mign_empty,spec,settings,statistics);
+	    migns.extend();
+		migns.current() = mign; 
+	}
+	
+	return true;
+}
+
+bdd_to_mign_command::bdd_to_mign_command ( const environment::ptr& env )
+	: cirkit_command( env, "Change BDD into MIG-n" )
+{
+	opts.add_options()
+		( "ce_on,d",                      value_with_default( &ce_on ),                      "Considering also Complemented edges arg (=1)" )
+		( "order_option,o",               value_with_default ( &order_option ),              "Variables order: 0 for normal order, 4 for SIFT, 21 for EXACT" );
+}
+
+bool bdd_to_mign_command::execute()
+{
+    auto& bdds = env->store<bdd_function_t>();
+   
+    if ( bdds.current_index() == -1 )
+    {
+      std::cout << "[w] no BDDs in store" << std::endl;
+      return true;
+    }
+
+    auto& bdd = bdds.current();
+  
+    auto mign = bdd_to_mign (bdd, ce_on, order_option); 
+	
+	auto& migns = env->store<mign_graph>();
+    migns.extend();
+  
+    migns.current() = mign;
 		
     return true;
 }

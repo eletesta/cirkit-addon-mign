@@ -36,7 +36,7 @@
 #ifndef CLI_THRESHOLD_SYNTHESIS_COMMAND_HPP
 #define CLI_THRESHOLD_SYNTHESIS_COMMAND_HPP
 
-#include <core/cli/cirkit_command.hpp>
+#include <cli/cirkit_command.hpp>
 
 namespace cirkit
 {
@@ -60,7 +60,8 @@ protected:
 
 private:
 	unsigned cut_size = 6u;
-	unsigned priority_cut = 0; 
+	unsigned priority_cut = 0u; 
+	unsigned allow_almost = 0u;
 	bool multi_obj_opt = false; 
 };
 

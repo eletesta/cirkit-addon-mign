@@ -3,6 +3,7 @@ add_cirkit_library(
   AUTO_DIRS src
   USE
     cirkit_classical
+    cirkit_cli
   INCLUDE
     PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src
   DEFINE

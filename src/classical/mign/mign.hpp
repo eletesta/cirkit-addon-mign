@@ -140,15 +140,13 @@ public:
     bool is_input( node_t n ) const;
     bool is_maj( node_t n ) const;
 	bool is_output (node_t n) const; 
-	//bool is_and (node_t n) const; 
-	//bool is_or (node_t n) const; 
+
 	
     const std::string& name() const;
     void set_name( const std::string& name );
     std::size_t size() const;
     unsigned num_gates() const;
-    //unsigned num_maj() const;
-	//unsigned num_input() const; 
+
 	
 	boost::optional<unsigned> nin() const; 
     const graph_t& graph() const;
@@ -168,7 +166,7 @@ public:
     std::vector<mign_cover> multi_cover() const;
 	unsigned size_multi_cover(); 
 	mign_cover& take_one_cover(unsigned i); 
-    void set_cover( const mign_cover& other );
+    void set_cover( const mign_cover& other);
 	void set_multi_cover (const std::vector<mign_cover>& other); 
 	
     inline void structural_hashing( bool disable ) { _disable = disable; }
@@ -189,14 +187,13 @@ private:
     boost::property_map<graph_t, boost::edge_complement_t>::type         complement;
 	
     dirty<std::vector<unsigned>>                                         fanout;
-	//dirty<std::vector<unsigned>                                                fanout;
     dirty<std::vector<std::vector<node_t>>>                              parentss;
     dirty<std::vector<unsigned>>                                         levels;
 
 	
 	  unsigned                                                           _num_maj = 0u;
 	  unsigned 															 num_input = 0u; 
-    //boost::property_map<graph_t, boost::vertex_ninput_t>::type         ninput;
+	  
 	using maj_strash_key_t = std::vector<mign_function>;   
 	std::unordered_map<maj_strash_key_t, node_t, hash<maj_strash_key_t> > maj_strash; // store and access it faster 
 	

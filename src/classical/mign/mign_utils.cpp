@@ -528,8 +528,7 @@ tt mign_simulate_cut( const mign_graph& mign, mign_node root, const std::vector<
 	  
 	  auto tt = simulate_mign_function( mign, root, sim );
 
-	
-	    tt_shrink( tt, size_l );
+	  tt_shrink( tt, size_l );
 	  
 
 	  return tt;
@@ -550,20 +549,20 @@ void mign_print_stats (const mign_graph& mign, std::ostream& os = std::cout)
 {
 	const auto name = mign.name();
 	auto depth = evaluate_depth (mign); 
-	auto depth_th = evaluate_depth_th (mign);
+	//auto depth_th = evaluate_depth_th (mign);
 	auto mign_nc = mign; 
-	auto energy = evaluate_energy (mign_nc);
-	auto energy_leak = leakage_energy(mign_nc,depth_th); 
+	//auto energy = evaluate_energy (mign_nc);
+	//auto energy_leak = leakage_energy(mign_nc,depth_th); 
 	auto ce = compute_ce (mign); 
 	auto inv = compute_inv(mign); 
-	auto depth_inv = evaluate_depth_inv(mign); 
-	auto dangling = compute_dangling(mign); 
-	os << boost::str( boost::format( "%s i/o = %d/%d , size = %d, depth = %d, ce = %d, inverters = %d, depth_inv = %d, dangling = %d" ) %( name.empty() ? "(unnamed)" : name ) % mign.inputs().size() % mign.outputs().size() % mign.num_gates() % depth %ce %inv %depth_inv %dangling) << std::endl; 
+	//auto depth_inv = evaluate_depth_inv(mign); 
+	//auto dangling = compute_dangling(mign); 
+	os << boost::str( boost::format( "%s i/o = %d/%d , size = %d, depth = %d, ce = %d, inverters = %d" ) %( name.empty() ? "(unnamed)" : name ) % mign.inputs().size() % mign.outputs().size() % mign.num_gates() % depth %ce %inv) << std::endl; 
 	os << "****************************************" << std::endl;
 	//os << boost::str( boost::format( " Depth threshold = %.2f" ) % depth_th) << std::endl;
 	//os << boost::str( boost::format( " Energy threshold = %.2f" ) % energy) << std::endl;
 	//os << boost::str( boost::format( " Energy threshold = %.2f" ) % energy_leak) << std::endl;
-	os << "****************************************" << std::endl;
+	//os << "****************************************" << std::endl;
 	
 	print_depth_statistics(mign); 
 	
@@ -571,7 +570,7 @@ void mign_print_stats (const mign_graph& mign, std::ostream& os = std::cout)
 	//auto smaller = compute_smaller (mign); 
 	//os << boost::str( boost::format( "Mig-n: smaller n = %d, larger n = %d") %smaller %larger ) << std::endl; 
 	
-	//print_big (mign, os);
+	print_big (mign, os);
 	
 }
 

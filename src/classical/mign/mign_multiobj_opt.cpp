@@ -772,7 +772,7 @@ void mign_flow_map_multiobj_manager::extract_cover()
 			auto position = get_comb_position (combinations.second,node); 
 			//std::cout << " position " << position << std::endl; 
 			auto cut = cuts->from_address( info[node][c[position]].node_to_cut );
-			covers[comb].add_cut( node, cut, info[node][c[position]].threshold, info[node][c[position]].weights, info[node][c[position]].neg_un, -1, -1);
+			covers[comb].add_cut( node, cut, info[node][c[position]].threshold, info[node][c[position]].weights, info[node][c[position]].neg_un);
 			visited[node] = true; 
 			
 					  	    for ( auto leaf : cut )
@@ -799,7 +799,7 @@ void mign_flow_map_multiobj_manager::extract_cover()
 				{
 					//std::cout << " size =" << info[node].size() << std::endl; 
 					auto cut = cuts->from_address( info[node][r.second].node_to_cut );
-				covers[comb].add_cut( node, cut, info[node][r.second].threshold, info[node][r.second].weights, info[node][r.second].neg_un, -1, -1);
+				covers[comb].add_cut( node, cut, info[node][r.second].threshold, info[node][r.second].weights, info[node][r.second].neg_un);
 			
 		  	    for ( auto leaf : cut )
 		  	    {

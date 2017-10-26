@@ -74,6 +74,13 @@ public:
   unsigned depth( mign_node node, const cut& c ) const;
   unsigned size( mign_node node, const cut& c ) const;
 
+  tt tt_func( mign_node node, const int cut) const; 
+  int is_maj_or_almost( mign_node node, const int cut) const;
+  tt tt_reminder( mign_node node, const int cut) const; 
+  tt tt_comp_in( mign_node node, const int cut) const;
+  std::string tt_exact( mign_node node, const int cut) const; 
+  
+
   unsigned index( const cut& c ) const;
   cut      from_address( unsigned address );
 
@@ -81,17 +88,16 @@ public:
 
 private:
   void enumerate();
-  //void enumerate_with_xor_blocks( const std::unordered_map<mign_node, mign_xor_block_t>& blocks );
-  //void enumerate_partial( const std::vector<mign_node>& start, const std::vector<mign_node>& boundary );
 
   void enumerate_node_with_bitsets( mign_node n, const std::vector<mign_node>& ns );
 
   using local_cut_vec_t = std::vector<std::tuple<boost::dynamic_bitset<>, unsigned, boost::dynamic_bitset<>>>;
-  local_cut_vec_t enumerate_local_cuts( mign_node n1, mign_node n2, unsigned max_cut_size );
-  local_cut_vec_t enumerate_local_cuts( mign_node n1, mign_node n2, mign_node n3, unsigned max_cut_size );
-  local_cut_vec_t enumerate_local_cuts( mign_node n1, mign_node n2, mign_node n3, mign_node n4, mign_node n5, unsigned max_cut_size );
-  local_cut_vec_t enumerate_local_cuts( const std::vector<mign_node>& ns, unsigned max_cut_size ); 
-  void merge_cut( local_cut_vec_t& local_cuts, const boost::dynamic_bitset<>& new_cut, unsigned min_level, const boost::dynamic_bitset<>& new_cone ) const;
+  //using local_cut_vec_t = std::vector<std::tuple<boost::dynamic_bitset<>, unsigned, boost::dynamic_bitset<>, boost::dynamic_bitset<>>>;
+  local_cut_vec_t enumerate_local_cuts( mign_node n1, mign_node n2, unsigned max_cut_size , mign_node n);
+  local_cut_vec_t enumerate_local_cuts( mign_node n1, mign_node n2, mign_node n3, unsigned max_cut_size , mign_node n);
+  local_cut_vec_t enumerate_local_cuts( mign_node n1, mign_node n2, mign_node n3, mign_node n4, mign_node n5, unsigned max_cut_size , mign_node n);
+  local_cut_vec_t enumerate_local_cuts( const std::vector<mign_node>& ns, unsigned max_cut_size, mign_node n ); 
+  void merge_cut( local_cut_vec_t& local_cuts, const boost::dynamic_bitset<>& new_cut, unsigned min_level, const boost::dynamic_bitset<>& new_cone, mign_node n ) const;
 
   std::vector<unsigned> get_extra( unsigned depth, unsigned size ) const;
 
@@ -100,6 +106,7 @@ private:
   unsigned         _k;
   unsigned         _priority = 10u;
   unsigned         _extra    = 0u;
+  unsigned         _almost   = 0u;
   paged_memory     data;
   paged_memory     cones;
 
@@ -108,6 +115,9 @@ private:
   unsigned         _top_index = 0u; /* index when doing topo traversal */
 
   std::vector<std::pair<unsigned, unsigned>> _levels;
+  
+public: 
+  std::vector<std::vector<std::tuple<boost::dynamic_bitset<>,int, boost::dynamic_bitset<>, boost::dynamic_bitset<>, std::string>>> almost_info;   /* store informaton for the almost majority algorithm : the tt , unsigned ( = 1 if MAJ, = 2 if AM bigger, 3 if AM smaller), the reminder tt , complemented inputs */
 };
 
 }

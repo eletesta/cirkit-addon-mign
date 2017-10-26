@@ -31,6 +31,7 @@
 #include <classical/mign/mign_cover.hpp>
 #include <classical/mign/mign_cuts_paged.hpp>
 #include <classical/mign/mign_utils.hpp>
+#include <classical/mign/mign_utils_majtt.hpp>
 #include <classical/mign/threshold_synthesis.hpp>
 
 #define timer timer_class
@@ -45,90 +46,10 @@
 
 namespace cirkit
 {
-
+		
 /******************************************************************************
  * Types                                                                      *
  ******************************************************************************/
-
-	bool is_almost_maj (tt func, int& almost_node_is_maj, tt& new_tt)
-	{
-		// check wheter the tt func is a almost a majority. And also check what is the truth table that we have to add to have a majority ;)  
-		/*auto maj = tt_num_vars( func ); 
-	    tt tt_maj( 1u << maj );
-	    boost::dynamic_bitset<> it( maj, 0 );
-		int flag = 0;
-
-	    do
-	    {
-	      m[it.to_ulong()] = it.count() > ( maj >> 1u );
-	      inc( it );
-	    } while ( it.any() );
-	
-		tt_allign(func,tt_maj); 
-		auto counter = 0u; 
-		new_tt.resize(tt_num_vars( func )); 
-	
-		for (auto i = 0u; i < tt_maj.sie(); i++)
-		{
-			if (func[i] == tt_maj[i])
-			{
-				counter++; 
-				tt_new[i] = 0; 
-			}
-			else 
-			{
-				if (func[i] > tt_maj[i])
-				{
-					if ((flag == 0) || (flag == 1))
-					{
-						flag = 1; 
-						tt_new[i] = 1;
-						almost_node_is_maj = 1; 
-					}
-					else if (flag == -1)
-					{
-						return false; 
-					}
-				}
-				else if (func[i] < tt_maj[i])
-				{
-					if ((flag == 0) || (flag == -1))
-					{
-						flag = -1; 
-						tt_new[i] = 1;
-						almost_node_is_maj = 0; 
-					}
-					else if (flag == 1)
-					{
-						return false; 
-					}
-				}
-			}
-		}
-		if (counter > tt_maj - 10)
-		{
-			return true; 
-		}
-		else return false;*/ 
-	
-		return false; 
-	}
-
-	int find_tt_in_cut (tt new_tt, std::vector<tt> tt_to_cut, mign_node node)
-	{
-	
-		/*for (auto n = 0; n < node; n++)
-		{
-			auto cut_tt = tt_to_vut[n]; 
-		
-		}*/
-		return -1; 
-	}
-
-	bool is_maj_with_dcs (tt func)  // non é cosi facile su un grafico in movimento perché cambierá tutto. 
-	{
-		return false; 
-	}
 	
 class mign_flow_almost_maj_manager
 {
@@ -142,22 +63,21 @@ private:
   void extract_cover();
 
 private:
-  mign_graph&                         mign;
-  std::vector<unsigned>               node_to_cut;
-  std::vector<float>                  node_to_level;
-  std::vector<unsigned>               threshold; 
-  std::vector<std::vector<unsigned>>  weights; 
-  std::vector<std::vector<bool>>      neg_un; 
-  std::vector<int>                    almost_tt; 
-  std::vector<int>                    almost_tt_is_maj; 
-  std::shared_ptr<mign_cuts_paged>    cuts;
-  std::vector<tt>                     tt_to_cut; 
+  mign_graph&                          mign;
+  std::vector<unsigned>                node_to_cut;
+  std::vector<float>                   node_to_level;
+  std::shared_ptr<mign_cuts_paged>     cuts;
+  std::vector<boost::dynamic_bitset<>> tt_is_maj; 
+  std::vector<unsigned>                tt_is_almostmaj_or_maj; 
+  std::vector<tt>                      reminder; 
+  std::vector<std::string>             exact;
   
   const properties::ptr& settings;
 
   /* settings */
   bool     verbose;
   unsigned cut_size;
+  unsigned extra; 
   unsigned priority_cut;
   unsigned allow_almost;
   bool progress; 
@@ -166,17 +86,17 @@ private:
 mign_flow_almost_maj_manager::mign_flow_almost_maj_manager( mign_graph& mign, const properties::ptr& settings )
   : mign( mign ), 
    node_to_cut( mign.size() ),
-   threshold (mign.size()), 
-   weights (mign.size()), 
-   neg_un(mign.size()),
-   almost_tt(mign.size()),
-   almost_tt_is_maj(mign.size()),
    node_to_level( mign.size() ), 
+   tt_is_maj(mign.size()),
+   tt_is_almostmaj_or_maj (mign.size()),
+   reminder (mign.size()), 
+   exact (mign.size()),
    settings(settings)
 {
-  verbose  = get( settings, "verbose",  true );
-  cut_size = get( settings, "cut_size", 6u);
-  progress = get( settings, "progress", true);
+  verbose      = get( settings, "verbose",  true );
+  cut_size     = get( settings, "cut_size", 8u);
+  progress     = get( settings, "progress", true);
+  extra        = get( settings, "extra", 0u);
   priority_cut = get( settings, "priority_cut", 0u);
   allow_almost = get( settings, "allow_almost", 0u);
 }
@@ -186,6 +106,8 @@ void mign_flow_almost_maj_manager::run()
   /* compute cuts */
   auto cuts_settings = std::make_shared<properties>();
   cuts_settings->set( "progress", progress );
+  cuts_settings->set( "extra", extra );
+  cuts_settings->set( "almost", allow_almost );
   cuts = std::make_shared<mign_cuts_paged>( mign, cut_size, cuts_settings);
   LN( boost::format( "[i] enumerated %d cuts in %.2f secs" ) % cuts->total_cut_count() % cuts->enumeration_time()) ;
 
@@ -196,10 +118,10 @@ void mign_flow_almost_maj_manager::run()
 
 void mign_flow_almost_maj_manager::find_best_cuts()
 {
-	std::cout << " [i] Find best cut" << std::endl;
+	std::cout << " [i] Find best cut ... " << std::endl;
 
     for ( auto node : mign.topological_nodes() )
-   {
+    {
     if ( mign.is_input( node ) )
     {
       assert( cuts->count( node ) == 1u );
@@ -210,138 +132,79 @@ void mign_flow_almost_maj_manager::find_best_cuts()
     {
       auto best_level = std::numeric_limits<float>::max();
       auto best_cut = 0u;
-	  auto best_input = 0u; 
-	  auto best_threshold = 0u; 
-	  std::vector<unsigned> best_w; 
-	  std::vector<bool> best_un; 
-	  auto best_almost_node = -1; 
-	  auto best_almost_is_maj = -1; 
+	  boost::dynamic_bitset<> best_tt_is_maj; 
+	  unsigned best_tt_is_almostmaj_or_maj; 
+	  tt best_tt_reminder;
+	  std::string best_exact;  
 	  
 	  tt tt_to_func; 
-	  
-      for ( const auto& cut : cuts->cuts( node ) )
+
+	  auto cut_c = -1; 
+	  for ( const auto& cut : cuts->cuts( node ) )
       {
-		 
+		cut_c++; 
+        auto flag = 0u; 
         if ( cut.size() == 1u )  { continue; } /* ignore singleton cuts */   
-        
-		auto func = cuts->simulate(node,cut); 
+		/*auto func = cuts->simulate(node,cut); 
 		const auto num_vars = tt_num_vars( func );
 		tt_to_func.resize(num_vars); 
-		tt_to_func = func; 
+		tt_to_func = func; */
 		
-		if (num_vars >= 11) continue; // Maj-5, MAJ-7 and MAJ-9
-		
-		auto result = compute_T_w (func); 
-		auto T = result.t_and_w.first; 
-		auto weig = result.t_and_w.second; 
-		auto n_of_input = input_threshold (num_vars,T,0, weig);
-		auto almost_node = -1; 
-		auto almost_node_is_maj = -1; 
-		
-		if ((result.t_and_w.first == 0) || (n_of_input >= 11))
-	    { 
-			if (allow_almost == 0)
-			{
-				/*if (is_maj_with_dcs (func)) // check if it is a majority with dcs
-				{
-					T = num_vars/2 + 1; 
-					for ( auto i = 0u; i < num_vars; i++)
-					{
-						weig[i] = 1; 
-					}
-				}*/
-			}
-			if (allow_almost == 1)
-			{
-				tt new_tt; 
-				if (is_almost_maj (func, almost_node_is_maj, new_tt)) // means it is bigger
-				{
-						almost_node = find_tt_in_cut (new_tt, tt_to_cut, node);  // funzione che restituisce il nodo da usare :) 
-				}
-				else 
-				{
-					almost_node_is_maj = -1;  
-					almost_node = -1;
-				}
-				/*  Algorithm: 
-				
-				1. Cerco se la truth table é "quasi " un MAJ -- decidere cosa vuol dire QUASI un maj 
-				2. Cerco di capire se é maggiore o minore...
-				3. Calcolo la trth table che dovrei sommarci - sottrarci 
-				4. Cerco se tale tt o tt con input negati giá esise tra quelle che ci sono. 
-				
-				  */
-				
-			}
-			else 
-			{
-				almost_node_is_maj = -1;  
-				almost_node = -1; 
-			}
-			 
-			if (( almost_node_is_maj >= 0) && (almost_node >= 0)) 
-			{
-				
-		        float local_max_level = 0u;
-				for ( auto leaf : cut )
-		        {
-		          local_max_level = std::max( local_max_level, node_to_level[leaf] + 1 );
-		        }
-				local_max_level = std::max( local_max_level, node_to_level[almost_node] + 1 );
-		        
-				if ( local_max_level < best_level )
-		        {
-		          best_level = local_max_level;
-		          best_cut = cut.address();
-				  best_input = num_vars; 
-				  best_threshold = 0; 
-				  std::vector<unsigned> best_w; 
-				  std::vector<bool> best_un; 
-				  best_almost_node = almost_node;  
-				  best_almost_is_maj = almost_node_is_maj;
-		        }
-			}
-			else 
-				continue; 
-	    } 
-		
-        float local_max_level = 0u;
+		//if (num_vars >= 9) continue; 
+	    boost::dynamic_bitset<> local_tt_is_maj; 
+		unsigned local_tt_almostmaj_or_maj;
+		tt local_tt_reminder; 
+		std::string local_tt_exact; 
+	  
+		if (cuts->is_maj_or_almost(node,cut_c) >= 0)
+		{
+			local_tt_is_maj = cuts->tt_comp_in(node,cut_c);
+			local_tt_almostmaj_or_maj = (unsigned) cuts->is_maj_or_almost(node,cut_c);
+			local_tt_reminder = cuts->tt_reminder(node,cut_c); 
+			local_tt_exact = cuts->tt_exact(node,cut_c);
+		}
+		else continue; 
+			
+	    float local_max_level = 0u;
 
         for ( auto leaf : cut )
         {
           local_max_level = std::max( local_max_level, node_to_level[leaf] );
         }
 
-        if ( local_max_level < best_level )
+        if ( local_max_level < best_level )  // MANCA IL CONTrollo suLLA SIZE DELL"EXACT "
         {
           best_level = local_max_level;
-          best_cut = cut.address();
-		  best_input = n_of_input; 
-		  best_threshold = result.t_and_w.first; 
-		  best_w = result.t_and_w.second; 
-		  best_un = result.nega_un; 
-		  best_almost_node = -1; 
-		  best_almost_is_maj = -1; 
+          best_cut = cut.address(); 
+		 
+		  best_tt_is_maj = local_tt_is_maj; 
+		  best_tt_is_almostmaj_or_maj = local_tt_almostmaj_or_maj; 
+		  best_tt_reminder = local_tt_reminder; 
+		  best_exact = local_tt_exact; 
         }
 		
       }
+      node_to_cut[node] = best_cut; 
+	  tt_is_maj[node] = best_tt_is_maj; 
+	  tt_is_almostmaj_or_maj[node] = best_tt_is_almostmaj_or_maj; 
+	  reminder[node] =  best_tt_reminder; 
+	  exact[node] = best_exact; 
 	  
-      tt_to_cut.push_back(tt_to_func); 
-      node_to_cut[node] = best_cut;
-	  threshold[node] = best_threshold; 
-	  weights[node] = best_w; 
-	  neg_un[node] = best_un; 
-	  almost_tt[node] = best_almost_node; 
-	  almost_tt_is_maj[node] = best_almost_is_maj;
-	  
-	  node_to_level[node] = best_level + 1u;
+	  if ((tt_is_almostmaj_or_maj[node] == 0u ) || (tt_is_almostmaj_or_maj[node] == 1u))
+	  {
+		node_to_level[node] = best_level + 1u;	
+	  }
+	  else 
+	  {
+		node_to_level[node] = best_level + 2u;
+	  }
     }
   }
 }
 
 void mign_flow_almost_maj_manager::extract_cover()
 {
-  std::cout << " [i]Extract Cover.." << std::endl;
+  std::cout << " [i]Extract Cover ..." << std::endl;
   boost::dynamic_bitset<> visited( mign.size() );
 
   mign_cover cover( cut_size, mign );
@@ -351,12 +214,12 @@ void mign_flow_almost_maj_manager::extract_cover()
   {
     auto node = deque.front();
     deque.pop_front();
-
+	
     if ( mign.is_input( node ) || visited[node] ) { continue; }
     visited[node] = true;
 	
     auto cut = cuts->from_address( node_to_cut[node] );
-    cover.add_cut( node, cut, threshold[node], weights[node], neg_un[node], almost_tt[node], almost_tt_is_maj[node]);
+    cover.add_cut_maj( node, cut, tt_is_maj[node], tt_is_almostmaj_or_maj[node], reminder[node], exact[node]);
 
     for ( auto leaf : cut )
     {

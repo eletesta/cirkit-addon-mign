@@ -133,42 +133,84 @@ bool thres_majn_command::execute()
 	
 	if (multi_obj_opt == false)
 	{
-	    clock_t t1,t2,t3,t4;
-        std::ostream& os = std::cout;
+		if (allow_almost == 0)
+		{
+		    clock_t t1,t2,t3,t4;
+	        std::ostream& os = std::cout;
 		
-        auto& migns = env->store<mign_graph>();
+	        auto& migns = env->store<mign_graph>();
        
-        if ( migns.current_index() == -1 )
-        {
-           std::cout << "[w] no MIGn in store" << std::endl;
-           return true;
-        }
+	        if ( migns.current_index() == -1 )
+	        {
+	           std::cout << "[w] no MIGn in store" << std::endl;
+	           return true;
+	        }
 		
-   	    auto& mign = migns.current();
+	   	    auto& mign = migns.current();
 	  
-   	    settings->set( "cut_size", cut_size );
-	    settings->set( "priority_cut", priority_cut); 
-		settings->set( "almost_maj", allow_almost); 
-   	    t1 = clock();
-   	    mign_flow_almost_maj( mign, settings, statistics );
+	   	    settings->set( "cut_size", cut_size );
+		    settings->set( "priority_cut", priority_cut); 
+			settings->set( "almost_maj", allow_almost); 
+	   	    t1 = clock();
+	   	    mign_flow_map( mign, settings, statistics );
 	  
 
-   	   t3 = clock();
-   	   auto mign_new = mign_cover_write (mign); 
-   	   t4 = clock();
-   	   float diff ((float)t4 - (float)t3);
-   	   float seconds = diff / CLOCKS_PER_SEC;
-   	   os << format( "[i] run-time writing graph MIG-n: %.2f seconds" ) % seconds << std::endl;
+	   	   t3 = clock();
+	   	   auto mign_new = mign_cover_write (mign); 
+	   	   t4 = clock();
+	   	   float diff ((float)t4 - (float)t3);
+	   	   float seconds = diff / CLOCKS_PER_SEC;
+	   	   os << format( "[i] run-time writing graph MIG-n: %.2f seconds" ) % seconds << std::endl;
 	 
-   	   auto mign_n = mign_rewrite_top_down( mign_new, settings,statistics ); 
-   	   t2 = clock();
+	   	   auto mign_n = mign_rewrite_top_down( mign_new, settings,statistics ); 
+	   	   t2 = clock();
 	 
-   	   float diff_two ((float)t2 - (float)t1);
-   	   seconds = diff_two / CLOCKS_PER_SEC;
-   	   os << format( "[i] TOTAL run-time: %.2f seconds" ) % seconds << std::endl;
+	   	   float diff_two ((float)t2 - (float)t1);
+	   	   seconds = diff_two / CLOCKS_PER_SEC;
+	   	   os << format( "[i] TOTAL run-time: %.2f seconds" ) % seconds << std::endl;
 	 
-   	   migns.extend();
-       migns.current() = mign_n; 
+	   	   migns.extend();
+	       migns.current() = mign_n; 
+		}
+	    else 
+		{
+		    clock_t t1,t2,t3,t4;
+	        std::ostream& os = std::cout;
+		
+	        auto& migns = env->store<mign_graph>();
+       
+	        if ( migns.current_index() == -1 )
+	        {
+	           std::cout << "[w] no MIGn in store" << std::endl;
+	           return true;
+	        }
+		
+	   	    auto& mign = migns.current();
+	  
+	   	    settings->set( "cut_size", cut_size );
+		    settings->set( "priority_cut", priority_cut); 
+			settings->set( "allow_almost", allow_almost); 
+	   	    t1 = clock();
+	   	    mign_flow_almost_maj( mign, settings, statistics );
+	  
+
+	   	   t3 = clock();
+	   	   auto mign_new = mign_cover_write_maj (mign); 
+	   	   t4 = clock();
+	   	   float diff ((float)t4 - (float)t3);
+	   	   float seconds = diff / CLOCKS_PER_SEC;
+	   	   os << format( "[i] run-time writing graph MIG-n: %.2f seconds" ) % seconds << std::endl;
+	 
+	   	   auto mign_n = mign_rewrite_top_down( mign_new, settings,statistics ); 
+	   	   t2 = clock();
+	 
+	   	   float diff_two ((float)t2 - (float)t1);
+	   	   seconds = diff_two / CLOCKS_PER_SEC;
+	   	   os << format( "[i] TOTAL run-time: %.2f seconds" ) % seconds << std::endl;
+	 
+	   	   migns.extend();
+	       migns.current() = mign_n; 
+		}
 		
 	}
 	

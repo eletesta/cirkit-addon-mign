@@ -310,24 +310,19 @@ mign_function mign_graph::create_maj ( std::vector<mign_function> operands)
 {
 	/*TODO Special cases*/
 	
-	//auto node_complement = false; // could be useful 
 	const auto size = operands.size(); 
 	
-	// TODO devo aggiungere anche l'opzione non solo omogeneo, ma heterogeneo con al massimo nodi da 11 per esempio. In quel caso pero devo aggiungere un opzione in piu, tipo un comando vero e falso che controlli questa opzione 
 	if ((_nin))
 	{
 		num_input = *_nin; 
 		
-		//std::cout << " numero di input = " << num_input << std::endl; 
 		if (size == num_input)	
 		{
-			//std::cout << " size 1 = " << size << std::endl; 
 		return create_maj_general(operands); 
 		}
 		
 		else if (size < num_input)
 		{
-			//std::cout << " size 2 = " << size << std::endl; 
 			auto volte = (num_input - size )/2; 
 			for ( auto i = 0; i < volte;++i )
 			{
@@ -705,7 +700,6 @@ bool mign_graph::has_multi_cover() const
 		return true; 
 	else return false; 
 }
-
 
 
 const mign_cover& mign_graph::cover() const

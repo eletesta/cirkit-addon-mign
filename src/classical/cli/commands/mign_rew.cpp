@@ -49,7 +49,7 @@
 #include <classical/mign/mign_to_mig3.hpp>
 #include <classical/mign/mign_invfree.hpp>
 #include <classical/mign/create_homo.hpp>
-#include <classical/mign/minimum_ce/minimum_ce.hpp>
+//#include <classical/mign/minimum_ce/minimum_ce.hpp>
 
 
 #include <classical/abc/abc_api.hpp>
@@ -287,7 +287,8 @@ bool minim_ce_command::execute()
 		settings-> set("minimum_after", false); 
 	
 		mign_graph mign_empty; 
-		auto mign = min_ce_with_sat( mign_empty,spec,settings,statistics);
+		mign_graph mign; 
+		//auto mign = min_ce_with_sat( mign_empty,spec,settings,statistics);
 	    migns.extend();
 		migns.current() = mign; 
 	}
@@ -301,7 +302,8 @@ bool minim_ce_command::execute()
 		const mign_tt_simulator simulator{};
 		auto values = simulate_mign(mign_old, simulator);
 		auto spec_tt = values[mign_old.outputs()[0].first];
-		auto mign = min_ce_with_sat( mign_old,spec_tt,settings,statistics); 
+		mign_graph mign; 
+		//auto mign = min_ce_with_sat( mign_old,spec_tt,settings,statistics); 
 		std::cout << " New number of CE = " << compute_ce(mign) << std::endl; 
 	    migns.extend();
 		migns.current() = mign; 
@@ -312,7 +314,8 @@ bool minim_ce_command::execute()
 		settings-> set("minimum_after", false); 
 	
 		mign_graph mign_empty; 
-		auto mign = min_ce_with_sat( mign_empty,spec,settings,statistics);
+		mign_graph mign; 
+		//auto mign = min_ce_with_sat( mign_empty,spec,settings,statistics);
 	    migns.extend();
 		migns.current() = mign; 
 	}

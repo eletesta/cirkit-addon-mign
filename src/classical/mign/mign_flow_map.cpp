@@ -134,18 +134,14 @@ void mign_flow_map_manager::find_best_cuts()
 	  unsigned best_threshold = 0u; 
 	  std::vector<unsigned> best_w; 
 	  std::vector<bool> best_un; 
-      //std::cout << "************* Node: " << node << std::endl; 
+
       for ( const auto& cut : cuts->cuts( node ) )
       {
 		 
-        if ( cut.size() == 1u )  { continue; } /* ignore singleton cuts */   // to comprare with approach in abc max K 9 
-			//std::cout << " simulate" << std::endl;
+        if ( cut.size() == 1u )  { continue; } /* ignore singleton cuts */   // to comprare with approach in abc max 
         auto func = cuts->simulate(node,cut); 
 		const auto num_vars = tt_num_vars( func );
-		//std::cout << " tt " << func << std::endl; 
-		//std::cout << "[i] - {" << any_join( cut.range(), ", " ) << "}" << std::endl; 
 		
-		//std::cout << " compute T w" << std::endl;
 		auto result = compute_T_w ( func); 
 		
 		if (result.t_and_w.first == 0) 
@@ -207,7 +203,7 @@ void mign_flow_map_manager::extract_cover()
     visited[node] = true;
 	
     auto cut = cuts->from_address( node_to_cut[node] );
-    cover.add_cut( node, cut, threshold[node], weights[node], neg_un[node], -1, -1);
+    cover.add_cut( node, cut, threshold[node], weights[node], neg_un[node]);
 
     for ( auto leaf : cut )
     {

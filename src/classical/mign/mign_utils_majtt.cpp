@@ -25,6 +25,8 @@
 #include <boost/format.hpp>
 #include <classical/mign/mign_simulate.hpp>
 #include <classical/mign/math_utils.hpp>
+#include <classical/xmg/xmg.hpp>
+#include <classical/mign/mign_dont_cares.hpp>
 
 using boost::format;
 
@@ -52,7 +54,7 @@ bool all_larger(tt func, tt tt_p)
 	{
 		if (func[x] == tt_p[x])
 			continue; 
-		else if ((func[x] == 1) && ( tt_p[x] == 0))
+		else if ((func[x] == 0) && ( tt_p[x] == 1))
 				continue; 
 		else 
 			return false; 
@@ -67,7 +69,7 @@ bool all_smaller(tt func, tt tt_p)
 	{
 		if (func[x] == tt_p[x])
 			continue; 
-		else if ((func[x] == 0) && ( tt_p[x] == 1))
+		else if ((func[x] == 1) && ( tt_p[x] == 0))
 			continue; 
 		else 
 			return false; 
@@ -105,7 +107,7 @@ tt calculate_tt_reminder_larger (tt func, tt tt_p)
 std::tuple<unsigned,boost::dynamic_bitset<>,tt> is_almost_maj (tt func)
 {
 	auto num_vars = tt_num_vars( func );
-    unsigned value = 2; 
+    unsigned value = 3; 
 	
 	if (num_vars %2 == 0)
 	{
@@ -120,7 +122,7 @@ std::tuple<unsigned,boost::dynamic_bitset<>,tt> is_almost_maj (tt func)
 		}
 		tt_resize(func, num_vars + 1); 
 		func = func_p; 
-		value = 3; 
+		value = 4; 
 		num_vars = num_vars + 1;
 	}
 	
@@ -128,7 +130,7 @@ std::tuple<unsigned,boost::dynamic_bitset<>,tt> is_almost_maj (tt func)
 	boost::dynamic_bitset<> it( num_vars, 0 );
 	boost::dynamic_bitset<> it_out( num_vars, 0 );
 	tt reminder (1u << num_vars); 
-	if (value == 3)
+	if (value == 4)
 	{
 		unsigned position = 0u; 
 		boost::dynamic_bitset<> it_p( num_vars -1 , 0 );
@@ -169,15 +171,55 @@ std::tuple<unsigned,boost::dynamic_bitset<>,tt> is_almost_maj (tt func)
 		  else if (all_smaller(func,tt_p))
 		  {
 			  reminder = calculate_tt_reminder_smaller (func,tt_p); 
-			  return std::make_tuple(value+2,it_out,reminder); 
+			  return std::make_tuple(value+3,it_out,reminder); 
 		  }
 		  inc(it_out); 
 	    } while ( it_out.any() ); 
+		
+		boost::dynamic_bitset<> it_or( num_vars, 0 );
+		boost::dynamic_bitset<> it_out_or( num_vars, 0 );
+		if (value == 4)
+		{
+			unsigned position = 0u; 
+			boost::dynamic_bitset<> it_p( num_vars -1 , 0 );
+		    do
+		    {
+		       m[position] = it_or.count() + 1 > ( num_vars >> 1u );
+		       inc( it_or );
+			   inc(it_p);
+			   position++; 
+		    } while ( it_p.any() ); // create MAJ function 
+		    for (auto t= 0; t < position; t++)
+			{
+				m [t + position] = m [t];
+			}
+		}
+		do
+		{
+		tt tt_p( 1u << num_vars );
+		tt_p = m; 
+		for (auto x = 0; x < it_out_or.size(); x++)
+	      {
+			if (it_out_or[x] == 1)
+				tt_p = tt_flip (tt_p,x);
+		  }
+		  if (all_larger(func,tt_p))
+		  {
+			  reminder = calculate_tt_reminder_larger (func,tt_p); 
+			  return std::make_tuple(value+1,it_out_or,reminder); 
+		  }
+		  else if (all_smaller(func,tt_p))
+		  {
+			  reminder = calculate_tt_reminder_smaller (func,tt_p); 
+			  return std::make_tuple(value+4,it_out_or,reminder); 
+		  }
+		  inc(it_out); 
+	    } while ( it_out.any() );
     
 return std::make_tuple(0,func, reminder); 
 }
 
-std::pair<unsigned,boost::dynamic_bitset<>> is_maj (tt func)
+std::pair<unsigned,boost::dynamic_bitset<>> is_maj (tt func, std::vector<mign_node> leafs, const mign_graph& mign, mign_node n)
 {
 	auto num_vars = tt_num_vars( func );
 	unsigned value = 1; 
@@ -200,46 +242,8 @@ std::pair<unsigned,boost::dynamic_bitset<>> is_maj (tt func)
 	}
 	tt m( 1u << num_vars );
 	boost::dynamic_bitset<> it( num_vars, 0 );
-	boost::dynamic_bitset<> it_out( num_vars, 0 );
-	    /*do
-	    {
-	       m[it.to_ulong()] = it.count() > 1;
-	       inc( it );
-	    } while ( it.any() ); // create AND function
-		boost::dynamic_bitset<> it_out_and( num_vars, 0 );
-		do
-		{ 
-		  auto tt_p = m; 
-		  for (auto x = 0; x < it_out_and.size(); x++)
-	      {
-			if (it_out_and[x] == 1)
-				tt_p = tt_flip (tt_p,x);
-		  }
-		  if (func == tt_p)
-			  return std::make_pair(1,it_out_and); 
-		  
-		  inc(it_out_and); 
-	    } while ( it_out_and.any() );
-	    do
-	    {
-	       m[it.to_ulong()] = it.count() > 0;
-	       inc( it );
-	    } while ( it.any() ); // create OR function 
-		boost::dynamic_bitset<> it_out_or( num_vars, 0 );
-		do
-		{ 
-		  auto tt_p = m;
-		  for (auto x = 0; x < it_out_or.size(); x++)
-	      {
-			if (it_out_or[x] == 1)
-				tt_p = tt_flip (tt_p,x);
-		  }
-		  if (func == tt_p)
-		  {
-			  return std::make_pair(2,it_out_or); 
-		  }
-		  inc(it_out_or); 
-	    } while ( it_out_or.any() );*/
+	boost::dynamic_bitset<> it_out( num_vars , 0 );
+
 	if (value == 2)
 	{
 		unsigned position = 0u; 
@@ -273,14 +277,120 @@ std::pair<unsigned,boost::dynamic_bitset<>> is_maj (tt func)
 		if (it_out[x] == 1)
 			tt_p = tt_flip (tt_p,x);
 	}
-		if (func == tt_p)
-	   {
+	if (func == tt_p)
+	{
+	    return std::make_pair(value,it_out); 
+	}
+	else /* Check dont cares */
+	{
+		boost::dynamic_bitset<> it_dc( num_vars , 0 );
+		unsigned flag_dc = 0; 
+		for ( auto t = 0; t < func.size(); t++)
+		{
+			if ( flag_dc == 1)
+				break; 
+			if (func[t] != tt_p[t])
+			{
+				std::cout << " DCS" << std::endl; 
+				auto dc = is_dontcare (leafs,mign, n, it_dc, func[t]);
+				if (dc == false)
+					flag_dc = 1;  
+			}
+			inc(it_dc); 
+		}
+		if (flag_dc == 0)
 			return std::make_pair(value,it_out); 
-	    }
-		inc(it_out); 
+	}
+    inc(it_out); 
     } while ( it_out.any() ); 
 	
+	boost::dynamic_bitset<> it_or( num_vars, 0 );
+	boost::dynamic_bitset<> it_out_or( num_vars , 0 );
+	if (value == 2)
+	{
+		unsigned position = 0u; 
+		boost::dynamic_bitset<> it_p( num_vars -1 , 0 );
+	    do
+	    {
+	       m[position] = (it_or.count() + 1) > ( num_vars >> 1u);
+	       inc( it_or );
+		   inc(it_p);
+		   position++; 
+	    } while ( it_p.any() ); // create MAJ function 
+	    for (auto t= 0; t < position; t++)
+		{
+			m [t + position] = m [t];
+		}
+	    do
+	    {
+	    auto tt_p = m; 
+	    for (auto x = 0; x < it_out_or.size(); x++)
+        {
+		    if (it_out_or[x] == 1)
+			    tt_p = tt_flip (tt_p,x);
+	    } 
+		    if (func == tt_p)
+	        {
+			    return std::make_pair(value+1,it_out_or); 
+	        }
+			else /* Check dont cares */
+			{
+				
+				boost::dynamic_bitset<> it_dc( num_vars , 0 );
+				unsigned flag_dc = 0; 
+				for ( auto t = 0; t < func.size(); t++)
+				{
+					if ( flag_dc == 1)
+						break; 
+					if (func[t] != tt_p[t])
+					{
+						std::cout << " DCS" << std::endl; 
+						auto dc = is_dontcare (leafs,mign, n, it_dc, func[t]);
+						if (dc == false)
+							flag_dc = 1;  
+					}
+					inc(it_dc); 
+				}
+				if (flag_dc == 0)
+					return std::make_pair(value+1,it_out_or); 
+			}
+		    inc(it_out_or); 
+        } while ( it_out_or.any() ); 
+    }
+	
 return std::make_pair(0,func); 
+}
+
+bool is_dontcare (std::vector<mign_node> leafs, const mign_graph& mign, mign_node n, boost::dynamic_bitset<> pattern, bool bit)
+{
+	std::map<xmg_node, bool> assignment; 
+	
+	assignment.insert(std::pair<mign_node,bool>(n,bit)); 
+	
+	//boost::dynamic_bitset<> mask(mign.inputs().size(), 0); 
+	//mask.flip();
+	boost::dynamic_bitset<> it(mign.inputs().size() , 0 );
+	for (auto l= 0; l < leafs.size(); l++)
+	{
+		if (mign.is_input(leafs[l]))
+		{
+			//mask.reset(leafs[l]); 
+			//it.set(leafs[l],pattern[l]);
+			assignment.insert(std::make_pair(leafs[l],pattern[l])); 
+		}
+	}
+    do
+    {
+	   for ( auto i  =0 ; i <  mign.inputs().size(); i++)
+	   {
+		   assignment.insert(std::make_pair(i + 1,it[i])); 
+	   }
+       auto dc = mign_is_observable_at_node(mign, n, it, assignment); 
+	   if (dc == true)
+		   return false; 
+       inc(it); 
+    } while ( it.any() ); 
+	return true; 
 }
 
 }

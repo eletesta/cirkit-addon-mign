@@ -1,6 +1,6 @@
 /* CirKit: A circuit toolkit
  * Copyright (C) 2009-2015  University of Bremen
- * Copyright (C) 2015-2016  EPFL
+ * Copyright (C) 2015-2017  EPFL
  *
  * Permission is hereby granted, free of charge, to any person
  * obtaining a copy of this software and associated documentation
@@ -25,43 +25,59 @@
  */
 
 /**
- * @file mign_sat_commands.hpp
+ * @file mign_bitmarks.hpp
  *
- * @brief TODO
+ * @brief Store MIGN bitmarks
  *
- * @author Eleonora
+ * @author Heinz Riener
  * @since  2.3
  */
 
-#ifndef MIGN_COMMANDS_HPP
-#define MIGN_COMMANDS_HPP
+#ifndef MIGN_BITMARKS_HPP
+#define MIGN_BITMARKS_HPP
 
-#include <classical/cli/stores_mign.hpp>
-#include <classical/cli/commands/threshold_synthesis.hpp>
-#include <classical/cli/commands/mignarith.hpp>
-#include <classical/cli/commands/mign_rew.hpp>
+#include <classical/mign/mign.hpp>
 
-using mign_store_types = boost::mpl::push_back<STORE_TYPES, mign_graph>::type; 
-#undef STORE_TYPES
-#define STORE_TYPES mign_store_types
+#include <boost/dynamic_bitset.hpp>
+
+#include <vector>
 
 namespace cirkit
 {
 
-#define CIRKIT_MIGN_COMMANDS   \
-	cli.set_category(" Synthesis "); \
-	ADD_COMMAND (thres_majn); \
-	ADD_COMMAND (mignarith) ; \
-	cli.set_category(" MIGn rewriting "); \
-	ADD_COMMAND (rules_rewriting); \
-	ADD_COMMAND (homo_rewriting); \
-	ADD_COMMAND (reduce_n_inputs); \
-	ADD_COMMAND (to_mig3); \
-	ADD_COMMAND (luts_mign); \
-	ADD_COMMAND (mign_inv_free); \
-	ADD_COMMAND (mign_fo_restr); \
-    ADD_COMMAND (minim_ce); \
-    ADD_COMMAND (bdd_to_mign); 					
+class mign_bitmarks
+{
+public:
+  void init_marks( unsigned size, unsigned num_colors = 1u );
+  bool is_marked( mign_node n, unsigned color = 0u ) const;
+  void mark( mign_node n, unsigned color = 0u );
+  void resize_marks( mign_node n );
+  void unmark( mign_node n, unsigned color = 0u );
+  void invert( unsigned color = 0u );
+  void reset( unsigned color = 0u );
+  unsigned count( unsigned color = 0u ) const;
+  unsigned size() const;
+  void move( unsigned dst, unsigned src );
+  
+  unsigned alloc();
+  void free( unsigned color );
+
+  unsigned num_layers() const;
+  unsigned num_used_layers() const;
+
+  boost::dynamic_bitset<> get( unsigned color = 0u ) const;
+
+  boost::dynamic_bitset<> get_used() const;
+  void set_used( const boost::dynamic_bitset<>& used_ );
+  
+private:
+  std::vector<boost::dynamic_bitset<>> marks;
+  boost::dynamic_bitset<> used;
+}; /* mign_bitmarks */
+
+
+void mign_mark_inner_nodes( mign_graph& mign, const std::vector<mign_node>& nodes, unsigned color );
+
 }
 
 #endif

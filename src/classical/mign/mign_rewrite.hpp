@@ -12,12 +12,14 @@
 namespace cirkit
 {
 
-//using mig_maj_rewrite_func_t = std::function<mig_function(mig_graph&, const mig_function&, const mig_function&, const mig_function&)>;
+using mign_substitutes_map_t = boost::optional<std::unordered_map<mign_node, mign_function>>;
 
 mign_graph mign_rewrite_top_down( const mign_graph& mign,
                                 const properties::ptr& settings,
                                 const properties::ptr& statistics ); 
-
+								
+mign_graph mign_rewrite_top_down_sub( const mign_graph& mign, const properties::ptr& settings,
+								                                const properties::ptr& statistics );
 
 }
 

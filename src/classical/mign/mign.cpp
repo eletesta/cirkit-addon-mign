@@ -25,6 +25,8 @@
 
 #include <classical/mign/mign_utils.hpp> 
 #include <classical/mign/mign_cover.hpp> 
+#include <classical/mign/mign_bitmarks.hpp>
+
 namespace cirkit
 {
 
@@ -35,7 +37,8 @@ namespace cirkit
 mign_graph::mign_graph (/*const std::string& name, */const boost::optional<unsigned> nin)
 	: constant(add_vertex(g)), 
 //_name (name),
-		_nin (nin)
+	_nin (nin),
+	    _bitmarks( std::make_shared<mign_bitmarks>() )
 {
 	assert (constant == 0); 
 	
@@ -600,6 +603,45 @@ boost::optional<unsigned> mign_graph::nin() const
 	}
 }
 
+mign_bitmarks& mign_graph::bitmarks()
+{
+  return *_bitmarks;
+}
+
+const mign_bitmarks& mign_graph::bitmarks() const
+{
+  return *_bitmarks;
+}
+
+void mign_graph::init_refs()
+{
+  compute_fanout();
+  ref_count = *fanout;
+}
+
+unsigned mign_graph::get_ref( mign_node n ) const
+{
+  return ref_count[n];
+}
+
+unsigned mign_graph::inc_ref( mign_node n )
+{
+  return ref_count[n]++;
+}
+
+unsigned mign_graph::dec_ref( mign_node n )
+{
+  assert( ref_count[n] > 0 );
+  return --ref_count[n];
+}
+
+void mign_graph::inc_output_refs()
+{
+  for ( const auto& output : outputs() )
+  {
+    ++ref_count[output.first.node];
+  }
+}
 
 std::size_t mign_graph::size() const
 {
@@ -682,12 +724,14 @@ std::vector<mign_function> mign_graph::children( mign_node n ) const
   return c;
 }
 
+
 std::vector<mign_graph::node_t> mign_graph::topological_nodes() const
 {
   std::vector<node_t> top( num_vertices( g ) );
   boost::topological_sort( g, top.begin() );
   return top;
 }
+
 
 bool mign_graph::has_cover() const
 {

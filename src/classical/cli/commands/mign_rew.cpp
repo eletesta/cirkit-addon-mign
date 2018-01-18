@@ -49,7 +49,8 @@
 #include <classical/mign/mign_to_mig3.hpp>
 #include <classical/mign/mign_invfree.hpp>
 #include <classical/mign/create_homo.hpp>
-//#include <classical/mign/minimum_ce/minimum_ce.hpp>
+#include <classical/mign/minimum_ce/minimum_ce.hpp>
+#include <classical/mign/minimum_ce/ffr_ce_opt.hpp>
 
 
 #include <classical/abc/abc_api.hpp>
@@ -272,7 +273,8 @@ minim_ce_command::minim_ce_command ( const environment::ptr& env )
 	opts.add_options()
 		( "sat_on_tt,s",       value(&spec),       "using SAT-based method (arg tt)" )
 	    ( "sat_from_mign,m",                       "using SAT-based method not changing original MIG-n (arg Mig-n) - works for single output" )
-		( "tree_opt_ffr,t",                        "using heuristic method (arg Mig-n)" );
+		( "tree_opt_ffr,t",                        "using heuristic method (arg Mig-n)" )
+	    ( "ffc_sat,f",                             "using SAT method on mffc -- nop changing shape on the sub-graph (arg Mig-n)" );
 }
 
 bool minim_ce_command::execute()
@@ -287,8 +289,7 @@ bool minim_ce_command::execute()
 		settings-> set("minimum_after", false); 
 	
 		mign_graph mign_empty; 
-		mign_graph mign; 
-		//auto mign = min_ce_with_sat( mign_empty,spec,settings,statistics);
+		auto mign = min_ce_with_sat( mign_empty,spec,settings,statistics);
 	    migns.extend();
 		migns.current() = mign; 
 	}
@@ -302,8 +303,7 @@ bool minim_ce_command::execute()
 		const mign_tt_simulator simulator{};
 		auto values = simulate_mign(mign_old, simulator);
 		auto spec_tt = values[mign_old.outputs()[0].first];
-		mign_graph mign; 
-		//auto mign = min_ce_with_sat( mign_old,spec_tt,settings,statistics); 
+		auto mign = min_ce_with_sat( mign_old,spec_tt,settings,statistics); 
 		std::cout << " New number of CE = " << compute_ce(mign) << std::endl; 
 	    migns.extend();
 		migns.current() = mign; 
@@ -313,9 +313,19 @@ bool minim_ce_command::execute()
 	{
 		settings-> set("minimum_after", false); 
 	
+		auto mign_old = migns.current();   
+		auto mign = ffr_min_ce( mign_old,settings,statistics);
+	    migns.extend();
+		migns.current() = mign; 
+	}
+	
+	if ( is_set( "ffc_sat" ) )
+	{
+		settings-> set("minimum_after", true); 
+	
 		mign_graph mign_empty; 
 		mign_graph mign; 
-		//auto mign = min_ce_with_sat( mign_empty,spec,settings,statistics);
+		//auto mign = ffr_ce_opt( mign_empty,spec,settings,statistics);// TODO to be implemented!! 
 	    migns.extend();
 		migns.current() = mign; 
 	}

@@ -26,8 +26,11 @@
 #include <core/utils/bitset_utils.hpp>
 #include <core/utils/range_utils.hpp>
 #include <core/utils/timer.hpp>
+#include <core/utils/program_options.hpp>
 #include <classical/utils/truth_table_utils.hpp>
 #include <classical/mig/mig.hpp>
+#include <classical/mig/mig_utils.hpp>
+#include <classical/mig/mig_from_string.hpp>
 
 #include <classical/mign/mig_to_mign.hpp>
 #include <classical/mign/mign_from_string.hpp>
@@ -38,6 +41,7 @@
 #include <formal/synthesis/exact_mig.hpp>
 
 #include <boost/assign/std/vector.hpp>
+#include <boost/optional.hpp>
 #include <boost/dynamic_bitset.hpp>
 #include <boost/graph/depth_first_search.hpp>
 #include <boost/graph/topological_sort.hpp>
@@ -310,7 +314,7 @@ void mign_cuts_paged::merge_cut( local_cut_vec_t& local_cuts, const boost::dynam
 
   if ( add )
   {
-    local_cuts += std::make_tuple( new_cut, min_level, new_cone);
+    local_cuts.push_back( std::make_tuple( new_cut, min_level, new_cone));
   }
   
 }
@@ -549,6 +553,7 @@ void mign_cuts_paged::enumerate_node_with_bitsets( mign_node n, const std::vecto
 {
   for ( const auto& cut : enumerate_local_cuts( ns, _top_index, n ) ) 
   {
+
     auto area = std::get<2>( cut );
     area.resize( n + 1 );
     area.set( n );
@@ -567,20 +572,21 @@ void mign_cuts_paged::enumerate_node_with_bitsets( mign_node n, const std::vecto
 	    }
 	    auto func = mign_simulate_cut( _mign, n, leafs ); 
 	    const auto num_vars = tt_num_vars( func );
+	
 		
 		unsigned flag = 0u; 
 		std::string str; 
 	
 		boost::dynamic_bitset<> reminder(func.size(),0); 
 		boost::dynamic_bitset<> inputs_c(num_vars,0); 
-		auto is_maj_p = is_maj(func); 
+		auto is_maj_p = is_maj(func, leafs, _mign, n); 
 		if (is_maj_p.first > 0) 
-		{		
+		{	
 			flag = 1; 
 			inputs_c = is_maj_p.second; 
 			almost_info[n].push_back(std::make_tuple(func,is_maj_p.first - 1,reminder,inputs_c, str));
 		}
-		if (flag == 0)
+		else if (flag == 0) // qua ci va 0
 		{
 			auto is_almost_maj_p = is_almost_maj(func); 
 			if ((std::get<0>(is_almost_maj_p) > 0) && (flag == 0)) 
@@ -589,20 +595,39 @@ void mign_cuts_paged::enumerate_node_with_bitsets( mign_node n, const std::vecto
 				reminder = std::get<2>(is_almost_maj_p);
 				auto statistics = std::make_shared<properties>();
 				auto settings = std::make_shared<properties>();
-				auto mig = exact_mig_with_sat ( reminder,settings,statistics);  
-				auto mign = mig_to_mign (*mig);
-				if (mign.num_gates() + 2 >  static_cast<unsigned int>( area.count() ) )
+				boost::optional<unsigned> timeout = 5; 
+				signed stop = static_cast<unsigned int>( area.count() ) - 3 - leafs.size(); 
+				if (stop <= 0) 
+				{
 					almost_info[n].push_back(std::make_tuple(func,-1,reminder,inputs_c, str));
+				}
+				
 				else 
 				{
-					str = mign_to_string( mign, mign.outputs()[0].first,settings,statistics);	
-				    almost_info[n].push_back(std::make_tuple(func,std::get<0>(is_almost_maj_p),reminder,inputs_c, str));
+					settings->set( "timeout", timeout);
+					settings->set( "stop", (unsigned)stop);
+					auto mig = exact_mig_with_sat ( reminder,settings,statistics);  
+					if (( (bool)mig ) )
+					{ 
+						auto mign = mig_to_mign (*mig);
+					    str = mign_to_string( mign, mign.outputs()[0].first,settings,statistics);	
+					    almost_info[n].push_back(std::make_tuple(func,std::get<0>(is_almost_maj_p),reminder,inputs_c, str));
+						assert (mign.size() - mign.inputs().size() - 1 <= stop); 
+							//}
+					}
+					else 
+						almost_info[n].push_back(std::make_tuple(func,-1,reminder,inputs_c, str));
 				}
+				
 			}
 			else 
 			{
-				almost_info[n].push_back(std::make_tuple(func,-1,reminder,inputs_c, str)); // questo va cambiato 
+				almost_info[n].push_back(std::make_tuple(func,-1,reminder,inputs_c, str)); 
 			}
+		}
+		else 
+		{
+			almost_info[n].push_back(std::make_tuple(func,-1,reminder,inputs_c, str)); 
 		}
 		
 	}

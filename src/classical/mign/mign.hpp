@@ -98,6 +98,7 @@ namespace cirkit
 {
 
 class mign_cover; 
+class mign_bitmarks;
 	
 class mign_graph 
 {
@@ -169,6 +170,17 @@ public:
     void set_cover( const mign_cover& other);
 	void set_multi_cover (const std::vector<mign_cover>& other); 
 	
+    /* ref counting */
+    void init_refs();
+    unsigned get_ref( mign_node n ) const;
+    unsigned inc_ref( mign_node n );
+    unsigned dec_ref( mign_node n );
+    void inc_output_refs();
+	
+  /* marking */
+    mign_bitmarks& bitmarks();
+    const mign_bitmarks& bitmarks() const;
+	
     inline void structural_hashing( bool disable ) { _disable = disable; }
     inline bool has_structural_hashing() const         { return !(_disable); }
 	
@@ -192,7 +204,7 @@ private:
 
 	
 	  unsigned                                                           _num_maj = 0u;
-	  unsigned 															 num_input = 0u; 
+	  unsigned 														   	 num_input = 0u; 
 	  
 	using maj_strash_key_t = std::vector<mign_function>;   
 	std::unordered_map<maj_strash_key_t, node_t, hash<maj_strash_key_t> > maj_strash; // store and access it faster 
@@ -201,6 +213,12 @@ private:
 
     std::shared_ptr<mign_cover>                                           _cover = nullptr;
 	std::vector<std::shared_ptr<mign_cover>>                              _multi_cover ;
+	
+    /* bitmarks */
+    std::shared_ptr<mign_bitmarks>                                        _bitmarks;
+	
+    /* utilities */
+    std::vector<unsigned>                                                 ref_count;
 	
 	bool                                                                  _disable = false; 
     

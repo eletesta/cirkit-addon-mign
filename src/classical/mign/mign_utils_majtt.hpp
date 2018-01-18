@@ -41,8 +41,9 @@ tt calculate_tt_reminder_larger (tt func, tt tt_p);
 tt calculate_tt_reminder_smaller (tt func, tt tt_p); 
 bool all_smaller(tt func, tt tt_p); 
 bool all_larger(tt func, tt tt_p);
-std::pair<unsigned,boost::dynamic_bitset<>> is_maj (tt func); 
-std::tuple<unsigned,boost::dynamic_bitset<>,tt> is_almost_maj (tt func); 
+std::pair<unsigned,boost::dynamic_bitset<>> is_maj (tt func, std::vector<mign_node> leafs, const mign_graph& mign, mign_node n);
+std::tuple<unsigned,boost::dynamic_bitset<>,tt> is_almost_maj (tt func); // deve prendere il ming e le leafs 
+bool is_dontcare (std::vector<mign_node> leafs, const mign_graph& mign, mign_node n, tt func, bool bit);
 }
 
 #endif

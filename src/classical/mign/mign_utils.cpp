@@ -554,10 +554,10 @@ void mign_print_stats (const mign_graph& mign, std::ostream& os = std::cout)
 	//auto energy = evaluate_energy (mign_nc);
 	//auto energy_leak = leakage_energy(mign_nc,depth_th); 
 	auto ce = compute_ce (mign); 
-	auto inv = compute_inv(mign); 
+	//auto inv = compute_inv(mign); 
 	//auto depth_inv = evaluate_depth_inv(mign); 
 	//auto dangling = compute_dangling(mign); 
-	os << boost::str( boost::format( "%s i/o = %d/%d , size = %d, depth = %d, ce = %d, inverters = %d" ) %( name.empty() ? "(unnamed)" : name ) % mign.inputs().size() % mign.outputs().size() % mign.num_gates() % depth %ce %inv) << std::endl; 
+	os << boost::str( boost::format( "%s i/o = %d/%d , size = %d, depth = %d, ce = %d" ) %( name.empty() ? "(unnamed)" : name ) % mign.inputs().size() % mign.outputs().size() % mign.num_gates() % depth %ce ) << std::endl; 
 	os << "****************************************" << std::endl;
 	//os << boost::str( boost::format( " Depth threshold = %.2f" ) % depth_th) << std::endl;
 	//os << boost::str( boost::format( " Energy threshold = %.2f" ) % energy) << std::endl;

@@ -57,7 +57,7 @@ using boost::format;
 
 namespace cirkit
 {
-
+	/*
 thres_synth_command::thres_synth_command ( const environment::ptr& env )
 	: cirkit_command( env, "Threshold Synthesis using Neutzling method (arg tt)" )
 {
@@ -114,7 +114,7 @@ bool thres_synth_command::execute()
    	  
 	
 	return true;
-}
+}*/
 
 thres_majn_command::thres_majn_command ( const environment::ptr& env )
 	: cirkit_command( env, "Generate Maj-n using from threshold using cut pruning - depth optimization" )

@@ -74,13 +74,12 @@ bracket_map_t find_bracket_pairs( const std::string& s, char open_bracket, char 
 
 mign_function function_from_string( mign_graph& mign, const std::string& expr, unsigned offset,
                                    const bracket_map_t& brackets, input_map_t& inputs )
-{
-  std::vector<mign_function> operands; 
-  assert( expr[offset] != '!' );
+{  
+ assert( expr[offset] != '!' );
 
   if ( expr[offset] == '<' )
   {
-    mign_function fs[3];
+    std::vector<mign_function> fs(3);
 
     auto child_pos = offset + 1u;
     auto to = 0u;
@@ -95,10 +94,11 @@ mign_function function_from_string( mign_graph& mign, const std::string& expr, u
       to = ( expr[child_pos] == '<' ) ? brackets.at( child_pos ) - child_pos + 1u : 1u;
 
       fs[i] = function_from_string( mign, expr, child_pos, brackets, inputs );
-      if ( inv ) { fs[i] = !fs[i]; }
+      if ( inv ) { 
+		  fs[i] = !fs[i]; }
     }
 
-    return mign.create_maj( operands );
+    return mign.create_maj( fs );
   }
   else if ( expr[offset] == '0' || expr[offset] == '1' )
   {
@@ -115,7 +115,10 @@ mign_function function_from_string( mign_graph& mign, const std::string& expr, u
     }
     else
     {
-      return it->second;
+	  if (it->second.complemented == 1)
+          return !it->second;
+	  else 
+	      return it->second;
     }
   }
 }

@@ -38,7 +38,7 @@ namespace cirkit
 
 mign_graph mig_to_mign_not_strash (const mig_graph& mig); 
 mign_graph mig_to_mign (const mig_graph& mig); 
-mig_graph mign_to_mig (const mign_graph& mign); 
+mig_graph  mign_to_mig (const mign_graph& mign); 
 
 }
 

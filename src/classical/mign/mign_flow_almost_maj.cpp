@@ -142,15 +142,11 @@ void mign_flow_almost_maj_manager::find_best_cuts()
 	  auto cut_c = -1; 
 	  for ( const auto& cut : cuts->cuts( node ) )
       {
+
 		cut_c++; 
         auto flag = 0u; 
         if ( cut.size() == 1u )  { continue; } /* ignore singleton cuts */   
-		/*auto func = cuts->simulate(node,cut); 
-		const auto num_vars = tt_num_vars( func );
-		tt_to_func.resize(num_vars); 
-		tt_to_func = func; */
 		
-		//if (num_vars >= 9) continue; 
 	    boost::dynamic_bitset<> local_tt_is_maj; 
 		unsigned local_tt_almostmaj_or_maj;
 		tt local_tt_reminder; 
@@ -190,7 +186,7 @@ void mign_flow_almost_maj_manager::find_best_cuts()
 	  reminder[node] =  best_tt_reminder; 
 	  exact[node] = best_exact; 
 	  
-	  if ((tt_is_almostmaj_or_maj[node] == 0u ) || (tt_is_almostmaj_or_maj[node] == 1u))
+	  if ((tt_is_almostmaj_or_maj[node] == 0u ) || (tt_is_almostmaj_or_maj[node] == 1u) || (tt_is_almostmaj_or_maj[node] == 2u))
 	  {
 		node_to_level[node] = best_level + 1u;	
 	  }
@@ -204,11 +200,13 @@ void mign_flow_almost_maj_manager::find_best_cuts()
 
 void mign_flow_almost_maj_manager::extract_cover()
 {
-  std::cout << " [i]Extract Cover ..." << std::endl;
+  std::cout << " [i] Extract Cover ..." << std::endl;
   boost::dynamic_bitset<> visited( mign.size() );
 
   mign_cover cover( cut_size, mign );
   auto deque = mign_output_deque( mign );
+  unsigned count = 0u; 
+  unsigned best_cut = 0u; 
 
   while ( !deque.empty() )
   {
@@ -220,13 +218,18 @@ void mign_flow_almost_maj_manager::extract_cover()
 	
     auto cut = cuts->from_address( node_to_cut[node] );
     cover.add_cut_maj( node, cut, tt_is_maj[node], tt_is_almostmaj_or_maj[node], reminder[node], exact[node]);
-
+	if (tt_is_almostmaj_or_maj[node] >= 3)
+	{
+		count++; 
+	}
+	
+	best_cut++; 
     for ( auto leaf : cut )
     {
       deque.push_back( leaf );
     }
   }
-
+  std::cout << " Count Almost = " << count<< "/" << best_cut << std::endl; 
   mign.set_cover( cover );
 }
 

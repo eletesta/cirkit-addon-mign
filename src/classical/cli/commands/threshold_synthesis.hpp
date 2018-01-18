@@ -41,14 +41,14 @@
 namespace cirkit
 {
 
-class thres_synth_command : public cirkit_command
+/*class thres_synth_command : public cirkit_command
 {
 public:
 	thres_synth_command( const environment::ptr& env );
 	
 protected:
 	bool execute();
-};
+};*/
 
 class thres_majn_command : public cirkit_command
 {

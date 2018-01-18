@@ -195,6 +195,7 @@ mign_function mign_to_majn_add_cut( const mign_graph& mign_old, mign_graph& mign
                          std::map<mign_node, mign_function>& old_to_new )
 {
 	
+	
   std::vector<mign_function> operands; 
   std::vector<mign_function> operands_almost;
   /* visited */
@@ -203,10 +204,9 @@ mign_function mign_to_majn_add_cut( const mign_graph& mign_old, mign_graph& mign
   {
     return it->second;
   }
-  
    mign_function f; 
    mign_function f1;
-   if ((mign_old.cover().has_tt_almostmaj_or_maj(n) == 0) || (mign_old.cover().has_tt_almostmaj_or_maj(n) == 1))
+   if ((mign_old.cover().has_tt_almostmaj_or_maj(n) == 0) || (mign_old.cover().has_tt_almostmaj_or_maj(n) == 1) || (mign_old.cover().has_tt_almostmaj_or_maj(n) == 2))
    {
 	   auto leaf_c = 0u; 
 	   for ( auto l : mign_old.cover().cut( n ) )
@@ -216,8 +216,13 @@ mign_function mign_to_majn_add_cut( const mign_graph& mign_old, mign_graph& mign
 	    }
 	   if (mign_old.cover().has_tt_almostmaj_or_maj(n) == 1)
 	   {
-		   assert (leaf_c %2 != 0); 
-	   	   operands.push_back(mign_new.get_constant(mign_old.cover().has_tt_maj(n)[leaf_c]));
+		   assert (leaf_c %2 == 0); 
+	   	   operands.push_back(mign_new.get_constant(0));
+	   }
+	   else if (mign_old.cover().has_tt_almostmaj_or_maj(n) == 2)
+	   {
+		   assert (leaf_c %2 == 0); 
+	   	   operands.push_back(mign_new.get_constant(1));
 	   }
 	
 	   f = mign_new.create_maj(operands); 
@@ -230,15 +235,17 @@ mign_function mign_to_majn_add_cut( const mign_graph& mign_old, mign_graph& mign
 	     operands.push_back(mign_to_majn_add_cut( mign_old, mign_new, l,old_to_new ) ^ mign_old.cover().has_tt_maj(n)[leaf_c]);
 		 leaf_c++; 
 	    }
-	   if (mign_old.cover().has_tt_almostmaj_or_maj(n) %2 != 0)
-		    operands.push_back(mign_new.get_constant(mign_old.cover().has_tt_maj(n)[leaf_c]));
+	   if ((mign_old.cover().has_tt_almostmaj_or_maj(n) == 4) ||(mign_old.cover().has_tt_almostmaj_or_maj(n) == 7))
+		    operands.push_back(mign_new.get_constant(0));
+	   else if ((mign_old.cover().has_tt_almostmaj_or_maj(n) == 5) ||(mign_old.cover().has_tt_almostmaj_or_maj(n) == 8))
+		     operands.push_back(mign_new.get_constant(1));
+	   
 	   f1 = mign_new.create_maj(operands); 
 
 		operands_almost.push_back(f1);
 		
 		/* Exact synthesis */ 
 		
-		operands_almost.push_back(f1); // qui ci va quello ESATTO - ottenuto con il reminder 
 		std::map<char, mign_function> inputs_map; 
 		
 		
@@ -251,6 +258,9 @@ mign_function mign_to_majn_add_cut( const mign_graph& mign_old, mign_graph& mign
 		auto statistics = std::make_shared<properties>();
 	    settings->set( "variable_map", inputs_map );
 		f1 = mign_from_string( mign_new, mign_old.cover().has_tt_exact(n),settings,statistics ); 
+
+		operands_almost.push_back(f1);
+		
 		
 		if ((mign_old.cover().has_tt_almostmaj_or_maj(n) == 2) || (mign_old.cover().has_tt_almostmaj_or_maj(n) == 3))
 			f = mign_new.create_and(operands_almost); 

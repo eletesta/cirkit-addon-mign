@@ -1,6 +1,6 @@
 /* CirKit: A circuit toolkit
  * Copyright (C) 2009-2015  University of Bremen
- * Copyright (C) 2015-2016  EPFL
+ * Copyright (C) 2015-2017  EPFL
  *
  * Permission is hereby granted, free of charge, to any person
  * obtaining a copy of this software and associated documentation
@@ -25,43 +25,28 @@
  */
 
 /**
- * @file mign_sat_commands.hpp
+ * @file xmg_dont_cares.hpp
  *
- * @brief TODO
+ * @brief Compute various don't cares
  *
- * @author Eleonora
- * @since  2.3
+ * @author Mathias Soeken
+ * @since  2.4
  */
 
-#ifndef MIGN_COMMANDS_HPP
-#define MIGN_COMMANDS_HPP
+#ifndef MIGN_DONT_CARES_HPP
+#define MIGN_DONT_CARES_HPP
 
-#include <classical/cli/stores_mign.hpp>
-#include <classical/cli/commands/threshold_synthesis.hpp>
-#include <classical/cli/commands/mignarith.hpp>
-#include <classical/cli/commands/mign_rew.hpp>
+#include <boost/dynamic_bitset.hpp>
 
-using mign_store_types = boost::mpl::push_back<STORE_TYPES, mign_graph>::type; 
-#undef STORE_TYPES
-#define STORE_TYPES mign_store_types
+#include <classical/mign/mign.hpp>
+#include <classical/xmg/xmg.hpp>
 
 namespace cirkit
 {
 
-#define CIRKIT_MIGN_COMMANDS   \
-	cli.set_category(" Synthesis "); \
-	ADD_COMMAND (thres_majn); \
-	ADD_COMMAND (mignarith) ; \
-	cli.set_category(" MIGn rewriting "); \
-	ADD_COMMAND (rules_rewriting); \
-	ADD_COMMAND (homo_rewriting); \
-	ADD_COMMAND (reduce_n_inputs); \
-	ADD_COMMAND (to_mig3); \
-	ADD_COMMAND (luts_mign); \
-	ADD_COMMAND (mign_inv_free); \
-	ADD_COMMAND (mign_fo_restr); \
-    ADD_COMMAND (minim_ce); \
-    ADD_COMMAND (bdd_to_mign); 					
+/* checks whether `pattern` is a don't care at `node`, meaning that by inverting node, one does not see a difference at the output -- uses XMGs -- only works with mign made of 3 inputs */
+bool mign_is_observable_at_node( const mign_graph& mign, mign_node node, const boost::dynamic_bitset<>& pattern , const std::map<xmg_node, bool>& assignment);
+
 }
 
 #endif

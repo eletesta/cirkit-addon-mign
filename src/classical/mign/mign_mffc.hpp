@@ -1,6 +1,6 @@
 /* CirKit: A circuit toolkit
  * Copyright (C) 2009-2015  University of Bremen
- * Copyright (C) 2015-2016  EPFL
+ * Copyright (C) 2015-2017  EPFL
  *
  * Permission is hereby granted, free of charge, to any person
  * obtaining a copy of this software and associated documentation
@@ -25,43 +25,41 @@
  */
 
 /**
- * @file mign_sat_commands.hpp
+ * @file mign_mffc.hpp
  *
- * @brief TODO
+ * @brief Compute MFFCs
  *
- * @author Eleonora
+ * @author Mathias Soeken
  * @since  2.3
  */
 
-#ifndef MIGN_COMMANDS_HPP
-#define MIGN_COMMANDS_HPP
+#ifndef MIGN_MFFC_HPP
+#define MIGN_MFFC_HPP
 
-#include <classical/cli/stores_mign.hpp>
-#include <classical/cli/commands/threshold_synthesis.hpp>
-#include <classical/cli/commands/mignarith.hpp>
-#include <classical/cli/commands/mign_rew.hpp>
+#include <map>
+#include <vector>
 
-using mign_store_types = boost::mpl::push_back<STORE_TYPES, mign_graph>::type; 
-#undef STORE_TYPES
-#define STORE_TYPES mign_store_types
+#include <classical/mign/mign.hpp>
 
 namespace cirkit
 {
 
-#define CIRKIT_MIGN_COMMANDS   \
-	cli.set_category(" Synthesis "); \
-	ADD_COMMAND (thres_majn); \
-	ADD_COMMAND (mignarith) ; \
-	cli.set_category(" MIGn rewriting "); \
-	ADD_COMMAND (rules_rewriting); \
-	ADD_COMMAND (homo_rewriting); \
-	ADD_COMMAND (reduce_n_inputs); \
-	ADD_COMMAND (to_mig3); \
-	ADD_COMMAND (luts_mign); \
-	ADD_COMMAND (mign_inv_free); \
-	ADD_COMMAND (mign_fo_restr); \
-    ADD_COMMAND (minim_ce); \
-    ADD_COMMAND (bdd_to_mign); 					
+unsigned mign_compute_mffc( mign_graph& mign, mign_node n, std::vector<mign_node>& support );
+std::map<mign_node, std::vector<mign_node>> mign_mffcs( mign_graph& mign );
+
+/* counts nodes including the root, but excluding the leafs */
+unsigned mign_mffc_size( const mign_graph& mign, mign_node n, const std::vector<mign_node>& support );
+/* returns nodes including the root, but excluding the leafs */
+std::vector<mign_node> mign_mffc_cone( const mign_graph& mign, mign_node n, const std::vector<mign_node>& support );
+
+/* check if curr is contained in the mffc defined by the pair (root,support) */
+bool mign_mffc_contains( const mign_graph& mign, mign_node root, const std::vector<mign_node>& support, mign_node curr );
+/* compute the number of nodes of the subcone (within mffcs) rooted by curr */
+unsigned mign_mffc_tipsize( const mign_graph& mign, const std::map<mign_node, std::vector<mign_node>> mffcs, mign_node curr );
+
+/* mark all nodes of a mffc defined by the pair (root,support) on mign */
+void mign_mffc_mark( mign_graph& mign, mign_node root, const std::vector<mign_node>& support );
+
 }
 
 #endif

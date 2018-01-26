@@ -38,6 +38,7 @@ namespace cirkit
 {
 	
 mign_graph bdd_to_mign (const bdd_function_t& bdd, const bool ce_on, unsigned order_option); 
+mign_graph majn_to_maj3 (const unsigned ninputs);
 
 }
 

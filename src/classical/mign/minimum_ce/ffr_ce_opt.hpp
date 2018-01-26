@@ -10,7 +10,7 @@
 
 namespace cirkit
 {
-   mign_graph ffr_min_ce (mign_graph mig, const properties::ptr& settings = properties::ptr(),const properties::ptr& statistics = properties::ptr() );    
+   mign_graph ffr_min_ce (mign_graph& mig, const properties::ptr& settings = properties::ptr(),const properties::ptr& statistics = properties::ptr() );    
 }
 
 #endif

@@ -140,6 +140,7 @@ protected:
 private:
 	bool ce_on = 0; 
 	unsigned order_option = 0; 
+	unsigned inputs = 3; 
 };
 
 }

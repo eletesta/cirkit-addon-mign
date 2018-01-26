@@ -112,7 +112,7 @@ mign_function mign_rewrite_top_down_rec( const mign_graph& mign, mign_node node,
                                        mign_graph& mign_new,
                                        std::map<mign_node, mign_function>& old_to_new )
 {
-	std::vector<mign_function> operands; 
+  std::vector<mign_function> operands; 
 	
   /* visited */
   const auto it = old_to_new.find( node );

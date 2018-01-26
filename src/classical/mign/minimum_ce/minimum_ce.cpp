@@ -115,10 +115,10 @@ struct exact_mig_instance_min
  		  const auto bw = (unsigned)ceil( log( 2u + num_vars + 7u ) / log( 2u ) );
 		
 		  
- 		for ( unsigned node=(n+1); node< mig.num_gates();node++)
+ 		for ( unsigned node=(0); node< mig.num_gates();node++)
  		{
 			 
- 		    const auto children = mig.children(node);
+ 		    const auto children = mig.children(node+n+1);
  			//std::cout << node << std::endl;
 	
    	      for ( auto x = 0u; x < 3u; ++x )
@@ -159,11 +159,11 @@ struct exact_mig_instance_min
 		auto x = 1u; 
 		auto i = 0u; 
 			
-	 		for ( unsigned node=(inputs+1); node< mig.num_gates();node++)
+	 		for ( unsigned node=(0); node< mig.num_gates();node++)
 	 		{
 				auto k = x+1; 
 				auto j = x+2;
-				const auto children = mig.children(node);
+				const auto children = mig.children(node + inputs+1);
 	 			//std::cout << node << std::endl;
 				if ((children[0u].node == 0u) && (children[1u].node != 0u) && (children[2u].node != 0u))
 				{
@@ -353,24 +353,21 @@ mign_graph minimum_ce(mign_graph& mig, const tt& spec, unsigned start, const std
   
   //const auto& info = mig_info(mig); 
   unsigned ninput = mig.inputs().size(); // numero di inputs
-  unsigned k = mig.num_gates() - ninput - 1u ; // numero di nodi 
-  
+  unsigned k = mig.num_gates() ; // numero di nodi 
+ 
   auto count_zero = 0u; 
 	 
-	for ( unsigned node=(ninput+1); node< mig.num_gates();node++)
+	for ( unsigned node=0; node< mig.num_gates();node++)
 	{
-		 
-	    const auto children = mig.children(node); 
-
-
+        const auto children = mig.children(node + ninput+1); 
 		for ( auto x = 0u; x < 3u; ++x )
 		 {	
 			  if (children[x].node == 0u) {
 				  ++count_zero; 
-			  }
-	  }
-  }
-   
+		       }
+	     }
+    }
+
   while ( p > 0)
   {
     if ( verbose )
@@ -379,6 +376,7 @@ mign_graph minimum_ce(mign_graph& mig, const tt& spec, unsigned start, const std
     }
 
 	auto n = k*3 + 2 - count_zero; 
+	
 	exact_mig_instance_min inst3( k, ninput, n+p);
 	     
 		  for ( auto i = 0u; i < k; ++i )
@@ -414,7 +412,6 @@ mign_graph minimum_ce(mign_graph& mig, const tt& spec, unsigned start, const std
           }
 		  else
 		  { 
-			  //std::cout << "it is impossible to realize the MIG with" << p << " ce" << std::endl;
 			  return mig; 
 		  }
 	  }
@@ -505,7 +502,7 @@ mign_graph exact_mig_ce_with_sat_explicit( const tt& spec, unsigned start, const
     const auto model_name    = get( settings, "model_name",  std::string( "minimum_ce" ) );
   
     const auto output_name   = get( settings, "output_name", std::string( "f" ) );
-    const auto minimum_after = get( settings, "minimum_after", true );  // minimize after or together with exact synthesis
+    const auto minimum_after = get( settings, "minimum_after", true );  
     const auto verbose       = get( settings, "verbose",     false );
 
 

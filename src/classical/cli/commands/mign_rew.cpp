@@ -51,6 +51,7 @@
 #include <classical/mign/create_homo.hpp>
 #include <classical/mign/minimum_ce/minimum_ce.hpp>
 #include <classical/mign/minimum_ce/ffr_ce_opt.hpp>
+#include <classical/mign/minimum_ce/mffr_sat.hpp>
 
 
 #include <classical/abc/abc_api.hpp>
@@ -323,9 +324,8 @@ bool minim_ce_command::execute()
 	{
 		settings-> set("minimum_after", true); 
 	
-		mign_graph mign_empty; 
-		mign_graph mign; 
-		//auto mign = ffr_ce_opt( mign_empty,spec,settings,statistics);// TODO to be implemented!! 
+		auto mign_old = migns.current();   
+		auto mign = mffrc_sat( mign_old,settings,statistics);
 	    migns.extend();
 		migns.current() = mign; 
 	}
@@ -338,28 +338,40 @@ bdd_to_mign_command::bdd_to_mign_command ( const environment::ptr& env )
 {
 	opts.add_options()
 		( "ce_on,d",                      value_with_default( &ce_on ),                      "Considering also Complemented edges arg (=1)" )
-		( "order_option,o",               value_with_default ( &order_option ),              "Variables order: 0 for normal order, 4 for SIFT, 21 for EXACT" );
+		( "order_option,o",               value_with_default ( &order_option ),              "Variables order: 0 for normal order, 4 for SIFT, 21 for EXACT" )
+	    ( "no_bdd,b",                     value_with_default( &inputs ),                      "Generate majority without the BDD -- Arg the number of inputs" );
 }
 
 bool bdd_to_mign_command::execute()
 {
-    auto& bdds = env->store<bdd_function_t>();
-   
-    if ( bdds.current_index() == -1 )
-    {
-      std::cout << "[w] no BDDs in store" << std::endl;
-      return true;
-    }
-
-    auto& bdd = bdds.current();
-  
-    auto mign = bdd_to_mign (bdd, ce_on, order_option); 
-	
 	auto& migns = env->store<mign_graph>();
-    migns.extend();
+	
+	if ( is_set( "no_bdd" ) )
+	{ 
+		auto mign = majn_to_maj3 (inputs);
+	    migns.extend();
+		migns.current() = mign; 
+	}
+	else 
+	{
+	    auto& bdds = env->store<bdd_function_t>();
+   
+	    if ( bdds.current_index() == -1 )
+	    {
+	      std::cout << "[w] no BDDs in store" << std::endl;
+	      return true;
+	    }
+
+	    auto& bdd = bdds.current();
   
-    migns.current() = mign;
-		
+	    auto mign = bdd_to_mign (bdd, ce_on, order_option); 
+	
+		auto& migns = env->store<mign_graph>();
+	    migns.extend();
+  
+	    migns.current() = mign;
+	}
+    		
     return true;
 }
 

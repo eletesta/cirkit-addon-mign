@@ -176,4 +176,81 @@ mign_graph bdd_to_mign (const bdd_function_t& bdd, const bool ce_on, unsigned or
    return mign; 	  
 }
 
+
+mign_graph majn_to_maj3 (const unsigned ninputs)
+{
+   mign_graph mign; 
+   
+   std::map<mign_node, mign_function> inputs;
+   std::cout << ninputs << std::endl; 
+   const unsigned nnodes =  pow((ninputs/2 + 1),2) - 1; 
+    std::cout << nnodes << std::endl;
+   const auto half = (ninputs +1)/2; 
+    std::cout << half << std::endl;
+
+   inputs[0] = mign.get_constant( false ); 
+   for ( auto x = 1; x <= ninputs; x++)
+   {
+     inputs[x] = mign.create_pi( boost::str( boost::format( "x%d" ) % x ));
+   }
+   
+     unsigned count = ninputs; 
+	  
+	 for (auto x = 2; x <= half; x++)
+	 {
+		 for (auto i = 0; i < x; i++)
+		 {
+			 if (i == 0)
+			 {
+				 count++; 
+			     std::vector<mign_function> operands; 
+			   	 operands.push_back(inputs[ninputs - x + 1]);
+				 operands.push_back(inputs[0]^1);
+				 operands.push_back(inputs[count - x + 1]); 
+				 auto f = mign.create_maj(operands); 
+				 inputs.insert( {count, f} );
+			 }
+			 else if (i == x - 1)
+			 {
+				 count++;
+			     std::vector<mign_function> operands; 
+			   	 operands.push_back(inputs[ninputs - x + 1]);
+				 operands.push_back(inputs[0]);
+				 operands.push_back(inputs[count - x ]);
+				 auto f = mign.create_maj(operands); 
+				 inputs.insert( {count, f} );
+			 }
+			 else {
+				 count++;
+			     std::vector<mign_function> operands; 
+			   	 operands.push_back(inputs[ninputs - x + 1]);
+				 operands.push_back(inputs[count - x ]);
+				 operands.push_back(inputs[count -x + 1]);
+				 auto f = mign.create_maj(operands); 
+				 inputs.insert( {count, f} );
+			 	
+			 }
+		 }
+	 }
+	 
+	 for (auto x = half -1 ; x > 0; x--)
+	 {
+		 for (auto i = 0; i < x; i++)
+		 {
+			 count++;
+		     std::vector<mign_function> operands; 
+		   	 operands.push_back(inputs[x]);
+			 operands.push_back(inputs[count - x -1 ]);
+			 operands.push_back(inputs[count -x ]);
+			 auto f = mign.create_maj(operands); 
+			 inputs.insert( {count, f} );
+		 }
+	 }
+	 
+
+   mign.create_po(inputs[count], "f" );
+
+   return mign; 	  
+}
+
 }

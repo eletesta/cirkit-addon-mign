@@ -17,26 +17,25 @@
  */
 
 /**
- * @file mig_rewriting.hpp
+ * @file xmg_io.hpp
  *
- * @brief MIG rewriting
+ * @brief I/O routines for MIGN _ Verilog Files and Write for BLIF 
  *
- * @author Mathias Soeken
+ * @author Eleonora Testa 
  * @since  2.3
  */
 
-#ifndef MIGN_REWRITING_MAJN_TO_SMALLER_HPP
-#define MIGN_REWRITING_MAJN_TO_SMALLER_HPP
+#ifndef MIGN_IO_HPP
+#define MIGN_IO_HPP
+
+#include <string>
 
 #include <core/properties.hpp>
-#include <classical/mign/mign.hpp>
 
 namespace cirkit
 {
-
-mign_graph mign_rewriting_majn_to_smaller( mign_graph& mign, const unsigned n, 
-	                              const properties::ptr& settings,
-	                              const properties::ptr& statistics ); 
+    
+void write_iterated_mult_verilog( const std::string& filename, const properties::ptr& settings = properties::ptr() );
 
 }
 

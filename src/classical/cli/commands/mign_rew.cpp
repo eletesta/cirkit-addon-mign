@@ -141,7 +141,8 @@ reduce_n_inputs_command::reduce_n_inputs_command ( const environment::ptr& env )
 	: cirkit_command( env, "Rewrite to smaller n (number different from 3 are allowed - whatever number of n inputs)" )
 {
 	opts.add_options()
-		( "n_max,n",          value_with_default( &max_inputs ),       "number of max inputs in the circuit (default = 3)" );
+		( "n_max,n",          value_with_default( &max_inputs ),       "number of max inputs in the circuit (default = 3)" )
+		( "option,o",         value_with_default( &option ),           "decomposition technique " );
 }
 
 bool reduce_n_inputs_command::execute()
@@ -150,19 +151,27 @@ bool reduce_n_inputs_command::execute()
 
     auto& migns = env->store<mign_graph>();
     auto settings = std::make_shared<properties>();
+	
+	settings-> set("option", option); 
        
 	if ( migns.current_index() == -1 )
     {
-       std::cout << "[w] no MIGn in store" << std::endl;
+        std::cout << "[w] no MIGn in store" << std::endl;
         return true;
      }
  
     auto& mign_old = migns.current();
- 
-    auto mign_rew = mign_rewriting_majn_to_smaller(mign_old, max_inputs,settings,statistics ); 
- 
-     migns.extend();
-   	 migns.current() = mign_rew; 
+	
+	mign_graph mign_rew; 
+	
+	while (compute_larger(mign_old) > max_inputs)
+	{
+		mign_rew = mign_rewriting_majn_to_smaller ( mign_old, max_inputs, settings, statistics ); 
+		mign_old = mign_rew; 
+	}
+
+    migns.extend();
+   	migns.current() = mign_rew; 
 		
     return true;
 }

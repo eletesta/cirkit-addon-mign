@@ -26,6 +26,7 @@
 
 #include <classical/cli/stores_mign.hpp>
 #include <classical/mign/arith_mign.hpp>
+#include <classical/mign/arithmetic_io.hpp>
 #include <classical/mign/mign_rewrite.hpp>
 
 using namespace boost::program_options;
@@ -56,6 +57,7 @@ mignarith_command::mignarith_command( const environment::ptr& env )
     ( "mult2,m", value (&bits),              "create mult of two numbers of n bits, constant depth")
     ( "threshold,t", value(&numbers),        "create threshold t gate of n number with polarity p n:t:p, weights can be inserted (1,1,1)")
 	( "matrix_mult,z", value(&numbers),      "create 2-matrix multiplication-like monotone circuit - arg (n:n:n:n); first three values are three matrix dimensions, second are final majority dimensions ")
+	( "iterated_mult,i", value(&filename),   "create a verilog file for iterated multiplication in constant depth (arg filename)" )	
     ;
 }
 
@@ -136,6 +138,14 @@ bool mignarith_command::execute()
 	  auto mignmult= mult2( bits);
       migns.extend();
       migns.current() = mign_rewrite_top_down (mignmult,settings,statistics);
+  }
+  
+  if (is_set ("iterated_mult"))
+  {
+	  set( settings, "default_name", std::string( "top" ) );
+	  set( settings, "inputs", 3);
+	  set( settings, "bits", 2);
+	  write_iterated_mult_verilog (filename, settings);
   }
      
   if ( is_set("threshold"))

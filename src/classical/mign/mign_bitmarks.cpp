@@ -113,6 +113,7 @@ unsigned mign_bitmarks::alloc()
   }
 
   assert( false && "unreachable" );
+  return 1; 
 }
 
 void mign_bitmarks::free( unsigned color )

@@ -137,18 +137,15 @@ public:
     const std::vector<node_t>& parents( node_t n ) const;
     unsigned level( node_t n ) const;
 	
-
     bool is_input( node_t n ) const;
     bool is_maj( node_t n ) const;
 	bool is_output (node_t n) const; 
-
 	
     const std::string& name() const;
     void set_name( const std::string& name );
     std::size_t size() const;
     unsigned num_gates() const;
 
-	
 	boost::optional<unsigned> nin() const; 
     const graph_t& graph() const;
     graph_t& graph();

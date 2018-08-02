@@ -75,6 +75,7 @@ protected:
 	bool execute();
 private: 
 	unsigned max_inputs = 3u; 
+	unsigned option = 0u; 
 };
 
 class to_mig3_command : public cirkit_command

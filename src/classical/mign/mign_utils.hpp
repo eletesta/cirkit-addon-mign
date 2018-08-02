@@ -45,6 +45,7 @@ float evaluate_energy (mign_graph& mign);
 float leakage_energy (mign_graph& mign, float depth); 
 void mign_print_stats(const mign_graph& mign, std::ostream& os);
 unsigned compute_ce (const mign_graph& mign);
+unsigned compute_larger (const mign_graph& mign);
  
 std::deque<mign_node> mign_output_deque( const mign_graph& mign );
 tt mign_simulate_cut( const mign_graph& mign, mign_node root, const std::vector<mign_node>& leafs ); 

@@ -45,6 +45,7 @@ protected:
 private:
   unsigned bits;
   std::string numbers; 
+  std::string filename; 
 };
 
 }

@@ -329,7 +329,7 @@ void print_big (const mign_graph& mign, std::ostream& os = std::cout)
 	
 	for (auto& node : store)
 	{
-		os << " There are " << node.second << " MIGs with " << node.first << " inputs" << std::endl; 
+		os << " There are " << node.second << " MAJs with " << node.first << " inputs" << std::endl; 
 	}
 }
 

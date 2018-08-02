@@ -61,7 +61,7 @@ namespace cirkit
 	ADD_COMMAND (mign_inv_free); \
 	ADD_COMMAND (mign_fo_restr); \
     ADD_COMMAND (minim_ce); \
-    ADD_COMMAND (bdd_to_mign); 					
+    ADD_COMMAND (bdd_to_mign); 			
 }
 
 #endif

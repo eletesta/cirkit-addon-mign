@@ -5,6 +5,9 @@ add_cirkit_library(
     cirkit_classical
     cirkit_cli
     cirkit_formal_z3
+    /usr/local/lib/libprimesieve.a 
+    ${GMPXX_LIBRARIES}
+    ${GMP_LIBRARIES}
   INCLUDE
     PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src
   DEFINE
